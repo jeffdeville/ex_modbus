@@ -16,7 +16,6 @@ defmodule ExModbus.RtuClient do
   end
 
   def send_and_rcv_packet(msg, serial, unit_id) do
-    wrapped_msg = Modbus.Rtu.wrap_packet(msg, unit_id)
     Logger.debug "Sending: #{inspect wrapped_msg}"
 
     Nerves.UART.flush(serial)
@@ -33,7 +32,7 @@ defmodule ExModbus.RtuClient do
       {:error, msg} ->
         {:error, msg}
     end
-
   end
 
+  defdelegate wrap_packet(packet, unit_id), to: Modbus.Rtu
 end

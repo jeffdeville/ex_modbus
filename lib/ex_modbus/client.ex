@@ -56,6 +56,7 @@ defmodule ExModbus.Client do
                         %{msg | data: {:read_coils, elems}}
     end
     response = Modbus.Packet.read_coils(address, count)
+               |> strategy.wrap_packet(unit_id)
                |> strategy.send_and_rcv_packet(transport, unit_id)
                |> limit_to_count.()
 
@@ -64,24 +65,28 @@ defmodule ExModbus.Client do
 
   def handle_call({:read_holding_registers, %{unit_id: unit_id, start_address: address, count: count}}, _from, {transport, strategy}) do
     response = Modbus.Packet.read_holding_registers(address, count)
+               |> strategy.wrap_packet(unit_id)
                |> strategy.send_and_rcv_packet(transport, unit_id)
     {:reply, response, {transport, strategy}}
   end
 
   def handle_call({:write_single_coil, %{unit_id: unit_id, start_address: address, state: state}}, _from, {transport, strategy}) do
     response = Modbus.Packet.write_single_coil(address, state)
+               |> strategy.wrap_packet(unit_id)
                |> strategy.send_and_rcv_packet(transport, unit_id)
     {:reply, response, {transport, strategy}}
   end
 
   def handle_call({:write_single_register, %{unit_id: unit_id, start_address: address, data: data}}, _from, {transport, strategy}) do
     response = Modbus.Packet.write_single_register(address,data)
+               |> strategy.wrap_packet(unit_id)
                |> strategy.send_and_rcv_packet(transport, unit_id)
     {:reply, response, {transport, strategy}}
   end
 
   def handle_call({:write_multiple_registers, %{unit_id: unit_id, start_address: address, data: data}}, _from, {transport, strategy}) do
     response = Modbus.Packet.write_multiple_registers(address, data)
+               |> strategy.wrap_packet(unit_id)
                |> strategy.send_and_rcv_packet(transport, unit_id)
     {:reply, response, {transport, strategy}}
   end
