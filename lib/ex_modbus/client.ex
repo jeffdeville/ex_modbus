@@ -4,8 +4,9 @@ defmodule ExModbus.Client do
   # Public Interface
 
   def start_link(args, opts \\ [])
-  def start_link({_a, _b, _c, _d} = ip, opts) do
-    args = %{ip: ip, strategy: ExModbus.TcpClient}
+  def start_link({_a, _b, _c, _d} = ip, opts), do: start_link(ip, Modbus.Tcp.port, opts)
+  def start_link({_a, _b, _c, _d} = ip, port, opts) do
+    args = %{ip: ip, port: port, strategy: ExModbus.TcpClient}
     GenServer.start_link(__MODULE__, args, opts)
   end
   def start_link(%{tty: _tty, speed: _speed} = args, opts) do
