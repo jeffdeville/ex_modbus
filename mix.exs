@@ -36,6 +36,8 @@ defmodule ExModbus.Mixfile do
   defp deps do
     [{:nerves_uart, git: "https://github.com/dhanson358/nerves_uart" },
      {:earmark, "~> 0.1.19", only: :dev},
-     {:ex_doc, "~> 0.10", only: :dev}]
+     {:ex_doc, "~> 0.10", only: :dev},
+     {:mix_test_watch, "~> 0.3", only: :dev, runtime: false}
+   ]
   end
 end
