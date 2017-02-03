@@ -2,11 +2,22 @@ defmodule ExModbus.RtuClient do
   @moduledoc """
   ModbusRTU client to manage communication with a device
   """
+  @behaviour ExModbus.ClientBehaviour
   require Logger
-
   @read_timeout 5000
 
-  # GenServer Callbacks
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate start_link(args, opts), to: ExModbus.Client
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate read_data(pid, unit_id, start_address, count), to: ExModbus.Client
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate read_coils(pid, unit_id, start_address, count), to: ExModbus.Client
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate write_single_coil(pid, unit_id, address, state), to: ExModbus.Client
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate write_single_register(pid, unit_id, address, data), to: ExModbus.Client
+  @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
+  defdelegate write_multiple_registers(pid, unit_id, address, data), to: ExModbus.Client
 
   def init(%{tty: tty, speed: speed}) do
      {:ok, uart_pid} = Nerves.UART.start_link
@@ -16,10 +27,10 @@ defmodule ExModbus.RtuClient do
   end
 
   def send_and_rcv_packet(msg, serial, unit_id) do
-    Logger.debug "Sending: #{inspect wrapped_msg}"
+    Logger.debug "Sending: #{inspect msg}"
 
     Nerves.UART.flush(serial)
-    Nerves.UART.write(serial, wrapped_msg)
+    Nerves.UART.write(serial, msg)
 
     case Nerves.UART.read(serial, @read_timeout) do
       # 1 here is slave_id, should be a variable
