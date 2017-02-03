@@ -1,7 +1,7 @@
 defmodule MockClient do
   require Logger
   @behaviour ExModbus.ClientBehaviour
-  def init(_args) do
+  def connect(_args) do
     {:ok, {nil, MockClient}}
   end
 
@@ -45,8 +45,8 @@ defmodule ClientTest do
     # end
   end
 
-  test "init\1 calls the provided strategy" do
-    assert Client.init(%{strategy: MockClient}) == {:ok, {nil, MockClient}}
+  test "connect\1 calls the provided strategy" do
+    assert Client.connect(nil, %{strategy: MockClient}) == {:ok, {nil, MockClient}}
   end
 
   # TODO: read_data is the only call I've used so far, so it's the only

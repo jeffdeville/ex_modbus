@@ -19,7 +19,7 @@ defmodule ExModbus.RtuClient do
   @doc "This is for backward compatibility with versions <= 0.3. Please Use ExModbus.Client now."
   defdelegate write_multiple_registers(pid, unit_id, address, data), to: ExModbus.Client
 
-  def init(%{tty: tty, speed: speed}) do
+  def connect(%{tty: tty, speed: speed}) do
      {:ok, uart_pid} = Nerves.UART.start_link
      Nerves.UART.open(uart_pid, tty, speed: speed, active: false)
      Nerves.UART.configure(uart_pid, framing: {ExModbus.Nerves.UART.Framing.Modbus, slave_id: 1})

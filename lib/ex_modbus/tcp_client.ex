@@ -12,11 +12,21 @@ defmodule ExModbus.TcpClient do
   defdelegate wrap_packet(packet, unit_id), to: Modbus.Tcp
   defdelegate unwrap_packet(packet), to: Modbus.Tcp
 
-  def init(%{ip: ip, port: port}) do
+  def connect(%{ip: ip, port: port} = args) do
     case :gen_tcp.connect(ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, :econnrefused} -> {:error, :econnrefused}
+      {:error, _} -> {:backoff, 1000, args}
     end
+  end
+
+  def disconnect(info, {socket, _}) do
+    :ok = :gen_tcp.close(socket)
+    case info do
+      {:close, from} -> Connection.reply(from, :ok)
+      {:error, :closed} -> Logger.error("Connection closed")
+      {:error, reason} -> Logger.error("Connection Error: #{inspect reason}")
+    end
+    {:connect, :reconnect, {nil, ExModbus.TcpClient}}
   end
 
   def command(msg, socket, unit_id) do
