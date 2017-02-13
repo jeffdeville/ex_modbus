@@ -115,8 +115,8 @@ defmodule Modbus.Packet do
   Parse a ModbusTCP response packet
   """
   def parse_response_packet(<<@read_holding_registers, _byte_count, data::binary>>) do
-    value_list = for <<value::size(16)-big <- data>>, do: value
-    {:ok, {:read_holding_registers, value_list}}
+    # value_list = for <<value::size(16)-big <- data>>, do: value
+    {:ok, {:read_holding_registers, data}}
   end
 
   def parse_response_packet(<<@read_holding_registers_exception, exception>>) do
