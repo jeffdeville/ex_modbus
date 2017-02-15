@@ -23,7 +23,7 @@ defmodule ExModbus do
 
       # if readable
       def unquote(name)(pid, slave_id \\ 1) do
-        IO.puts inspect [unquote(name), pid, slave_id]
+        # IO.puts inspect [unquote(name), pid, slave_id]
         case ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)) do
           {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
             with {:ok, value} = data |> ExModbus.Types.convert_type(unquote(type))
@@ -51,7 +51,6 @@ defmodule ExModbus do
 
       # if readable
       def unquote(name)(pid, slave_id \\ 1) do
-        IO.puts inspect [unquote(name), pid, slave_id]
         case ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)) do
           {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
             with {:ok, value} = data |> ExModbus.Types.convert_type(unquote(type)),

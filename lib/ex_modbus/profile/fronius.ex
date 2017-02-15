@@ -1,118 +1,99 @@
-defmodule ExModbus.Types do
-  # def convert_type(data, "uint16"), do: convert_type(data, String.to_atom("unsigned-integer-size(16)"))
+defmodule ExModbus.Profiles.Fronius do
+  use ExModbus
+  # C001, Common
+  field :manufacturer,   :string32, 40005, 16, :r, "(Mn Units:  SF: ) Manufacturer - Range: Fronius"
+  field :model,          :string32, 40021, 16, :r, "(Md Units:  SF: ) Device model - Range: z. B. IG+150V [3p]"
+  field :options,        :string16, 40037,  8, :r, "(Opt Units:  SF: ) Options - Range: Firmware version of Datamanager"
+  field :version,        :string16, 40045,  8, :r, "(Vr Units:  SF: ) SW version of inverter - Range:"
+  field :serial,         :string32, 40053, 16, :r, "(SN Units:  SF: ) Serialnumber of the inverter - Range:"
+  field :device_address, :uint16,   40069,  1, :r, "(DA Units:  SF: ) Modbus Device Address - Range: 1-247"
 
-  # def convert_type(<<float::>>, "float32"), do: {:ok, float}
-  # Eventually, I'll want to look this value up in the bitfield lookups I can define.
-  def convert_type(<<bitfield::unsigned-integer-size(32)>>, :bitfield32), do: {:ok, bitfield}
-  # Eventually, I'll want to look this value up in the enum blocks I can define.
-  def convert_type(<<int::signed-integer-size(16)>>, :int16), do: {:ok, int}
-  def convert_type(<<uint::unsigned-integer-size(16)>>, :enum16), do: {:ok, uint}
-  def convert_type(<<uint::unsigned-integer-size(16)>>, :uint16), do: {:ok, uint}
-  def convert_type(<<uint::unsigned-integer-size(32)>>, :uint32), do: {:ok, uint}
-  def convert_type(<<scale_factor::signed-integer-size(16)>>, :sunssf), do: {:ok, scale_factor}
-
-  def convert_type(<<flt::float-size(32)>>, :float32), do: {:ok, flt}
-  def convert_type(<<flt::float-size(16)>>, :float16), do: {:ok, flt}
-
-  def convert_type(data, :string32), do: convert_type(data, :string)
-  def convert_type(data, :string16), do: convert_type(data, :string)
-  def convert_type(data, <<"String", _size::binary>>), do: convert_type(data, :string)
-  def convert_type(data, :string) do
-    res = data
-    |> :binary.bin_to_list
-    |> Enum.filter(fn(byte) -> byte != 0 end)
-    |> to_string
-
-    {:ok, res}
+  # Inverter Model - Float
+  field :ac,                :float32, 40072, 2, :r,  "(A) AC total current value"
+  field :aph_a,             :float32, 40074, 2, :r,  "(A) AC phase A current val- ue"
+  field :aph_b,             :float32, 40076, 2, :r,  "(A) AC phase B current val- ue"
+  field :aph_c,             :float32, 40078, 2, :r,  "(A) AC phase C current val- ue"
+  field :ppv_ph_ab,         :float32, 40080, 2, :r,  "(V) AC voltage phase AB value"
+  field :ppv_ph_bc,         :float32, 40082, 2, :r,  "(V) AC voltage phase BC value"
+  field :ppv_ph_ca,         :float32, 40084, 2, :r,  "(V) AC voltage phase CA value"
+  field :ph_vph_a,          :float32, 40086, 2, :r,  "(V) AC voltage phase-A-to- neutral value"
+  field :ph_vph_b,          :float32, 40088, 2, :r,  "(V) AC voltage phase-B-to- neutral value"
+  field :ph_vph_c,          :float32, 40090, 2, :r,  "(V) AC voltage phase-C-to- neutral value"
+  field :w,                 :float32, 40092, 2, :r,  "(W) AC power value"
+  field :hz,                :float32, 40094, 2, :r,  "(Hz) AC frequency value"
+  field :va,                :float32, 40096, 2, :r,  "(VA) Apparent power"
+  field :v_ar,              :float32, 40098, 2, :r,  "(VAr) Reactive power"
+  field :pf,                :float32, 40100, 2, :r,  "(%) Power factor"
+  field :wh,                :float32, 40102, 2, :r,  "(Wh) AC lifetime energy pro- duction"
+  field :dca,               :float32, 40104, 2, :r,  "(A) DC current value - DC current only if one MPPT available; with multiple MPPT 'not implemented'"
+  field :dcv,               :float32, 40106, 2, :r, "V DC voltage value DC voltage only if one MPPT avail- able; with multiple MPPT “not implement- ed”"
+  field :dcw,               :float32, 40108, 2, :r, "W DC power value Total DC power of all available MPPT"
+  field :temp_cabinet,      :float32, 40110, 2, :r, "°C Cabinet temperature"
+  field :temp_heat_sink,    :float32, 40112, 2, :r, "°C Coolant or heat sink temperature"
+  field :temp_transformer,  :float32, 40114, 2, :r, "°C Transformer tempera- ture"
+  field :temp_other,        :float32, 40116, 2, :r, "°C Other temperature"
+  # SunSpec State Codes
+  # Name                  Value  Description
+  # I_STATUS_OFF            1    Inverter is off
+  # I_STATUS_SLEEPING       2    Auto shutdown
+  # I_STATUS_STARTING       3    Inverter starting
+  # I_STATUS_MPPT           4    Inverter working normally
+  # I_STATUS_THROTTLED      5    Power reduction active
+  # I_STATUS_SHUTTING_DOWN  6    Inverter shutting down
+  # I_STATUS_FAULT          7    One or more faults present, see St*or Evt* register
+  # I_STATUS_STANDBY        8    Standby
+  field :st,                :enum16,  40118, 1, :r, "Enumerated Operating state (see SunSpec State Codes)",
+  fn
+    0 -> nil
+    1 -> :off
+    2 -> :sleeping
+    3 -> :starting
+    4 -> :mppt
+    5 -> :throttled
+    6 -> :shutting_down
+    7 -> :fault
+    8 -> :standby
   end
-  def convert_type(data, type) do
-    require IEx; IEx.pry
-    IO.puts inspect "Unable to convert type: #{type}"
-    {:type_conversion_error, type}
-  end
-end
 
-defmodule ExModbus.Fronius do
-  alias ExModbus.Client
-  # "Start Offset" "End Offset" Size  RW  "Function codes"  Name  Description Type  Units Scale Factor  "Range of values"
-  # 1 2 2 R 0x03  SID Well-known value. Uniquely identifies this as a SunSpec Modbus Map  uint32      0x53756e53 ('SunS')
-  # 3 3 1 R 0x03  ID  Well-known value. Uniquely identifies this as a SunSpec Common Model block  uint16      1
-  # 4 4 1 R 0x03  L Length of Common Model block  uint16  Registers   65
-  # 5 20  16  R 0x03  Mn  Manufacturer  String32      Fronius
-  # 21  36  16  R 0x03  Md  Device model  String32      z. B. IG+150V [3p]
-  # 37  44  8 R 0x03  Opt Options String16      Firmware version of Datamanager
-  # 45  52  8 R 0x03  Vr  SW version of inverter  String16
-  # 53  68  16  R 0x03  SN  Serialnumber of the inverter  String32
-  # 69  69  1 R 0x03  DA  Modbus Device Address uint16
-  def sid(pid, slave_id) do
-    case Client.read_data(pid, slave_id, 40_004, 16) do
-      {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
-        with {:ok, value} = data |> ExModbus.Types.convert_type("String32")
-        do
-          {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
-        else
-          {:type_conversion_error, type} ->
-            require IEx; IEx.pry
-            {:type_conversion_error, type}
-        end
-      other ->
-        require IEx; IEx.pry
-        IO.puts inspect other
+  # Fronius State Codes
+  # Name                  Value Description
+  # I_STATUS_OFF            1   Inverter is off
+  # I_STATUS_SLEEPING       2   Auto shutdown
+  # I_STATUS_STARTING       3   Inverter starting
+  # I_STATUS_MPPT           4   Inverter working normally
+  # I_STATUS_THROTTLED      5   Power reduction active
+  # I_STATUS_SHUTTING_DOWN  6   Inverter shutting down
+  # I_STATUS_FAULT          7   One or more faults present, see St*or Evt* register
+  # I_STATUS_STANDBY        8   Standby
+  # I_STATUS_NO_BUSINIT     9   No SolarNet communication
+  # I_STATUS_NO_COMM_INV    10  No communication with inverter possible
+  # I_STATUS_SN_OVERCURRENT 11  Overcurrent detected on SolarNet plug
+  # I_STATUS_BOOTLOAD       12  Inverter is currently being updated
+  # I_STATUS_AFCI           13  AFCI event arcdetection
+  field :st_vnd, :enum16, 40119, 1, :r, "Enumerated Vendor defined operating state (See Fronius State Codes))",
+    fn
+      0  -> nil
+      1  -> :off
+      2  -> :sleeping
+      3  -> :starting
+      4  -> :mppt
+      5  -> :throttled
+      6  -> :shutting_down
+      7  -> :fault
+      8  -> :standby
+      9  -> :no_businit
+      10 -> :no_comm_inv
+      11 -> :sn_overcurrent
+      12 -> :bootload
+      13 -> :afci
     end
-  end
+  field :evt1,              :uint32,  40120, 2, :r, "Bit field Event flags (bits 0–31) (custom - can be downloaded from Fronius website)"
+  field :evt2,              :uint32,  40122, 2, :r, "Bit field Event flags (bits 32–63) (custom - can be downloaded from Fronius website)"
+  field :evt_vnd1,          :uint32,  40124, 2, :r, "Bit field Vendor defined event flags (bits 0–31) (custom - can be downloaded from Fronius website)"
+  field :evt_vnd2,          :uint32,  40126, 2, :r, "Bit field Vendor defined event flags (bits 32–63) (custom - can be downloaded from Fronius website)"
+  field :evt_vnd3,          :uint32,  40128, 2, :r, "Bit field Vendor defined event flags (bits 64–95) (custom - can be downloaded from Fronius website)"
+  field :evt_vnd4,          :uint32,  40130, 2, :r, "Bit field Vendor defined event flags (bits 96–127) (custom - can be downloaded from Fronius website)"
 
-  def ac(pid, slave_id) do
-    case Client.read_data(pid, slave_id, 40_072, 2) do
-      {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
-        with {:ok, value} = data |> ExModbus.Types.convert_type("float32")
-        do
-          {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
-        else
-          {:type_conversion_error, type} ->
-            require IEx; IEx.pry
-            {:type_conversion_error, type}
-        end
-      other ->
-        require IEx; IEx.pry
-        IO.puts inspect other
-    end
-  end
+  # Left off on Nameplate Model (IC123)
 
-  def power_factor(pid, slave_id) do
-    case Client.read_data(pid, slave_id, 40237 + 11 - 1, 1) do
-      {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
-        with {:ok, value} = data |> ExModbus.Types.convert_type("int16")
-        do
-          {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
-        else
-          {:type_conversion_error, type} ->
-            require IEx; IEx.pry
-            {:type_conversion_error, type}
-        end
-      other ->
-        require IEx; IEx.pry
-        IO.puts inspect other
-    end
-  end
-
-  # power factor needs to be an integer that will be scaled based on the ssf value (+25)
-  # so when I do this for real, I'll want to get the sunssf factor, and
-  def set_power_factor(pid, slave_id, power_factor) do
-    pf = <<power_factor::signed-integer-size(16)>>
-    case Client.write_multiple_registers(pid, slave_id, 40237 + 11 - 1, pf) do
-      {:ok, %{data: {:write_multiple_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
-        {:ok, %{data: data, transaction_id: transaction_id, slave_id: unit_id}}
-        # with {:ok, value} = data |> ExModbus.Types.convert_type("int16")
-        # do
-        #   {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
-        # else
-        #   {:type_conversion_error, type} ->
-        #     require IEx; IEx.pry
-        #     {:type_conversion_error, type}
-        # end
-      other ->
-        require IEx; IEx.pry
-        IO.puts inspect other
-    end
-  end
 end
