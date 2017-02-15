@@ -94,6 +94,52 @@ defmodule ExModbus.Profiles.Fronius do
   field :evt_vnd3,          :uint32,  40128, 2, :r, "Bit field Vendor defined event flags (bits 64–95) (custom - can be downloaded from Fronius website)"
   field :evt_vnd4,          :uint32,  40130, 2, :r, "Bit field Vendor defined event flags (bits 96–127) (custom - can be downloaded from Fronius website)"
 
-  # Left off on Nameplate Model (IC123)
+  # Left off on Nameplate Model
 
+  # Immediate Control Model (IC123)
+  field :conn_win_tms,      :uint16,     40240, 1, :rw, "Time window for connect/disconnect (0-300 seconds)"
+  field :conn_rvrt_tims,    :uint16,     40241, 1, :rw, "Timeout window for connect/disconnect (0-300 seconds)"
+  field :conn,              :enum16, 40242, 1, :rw, "Enumerated value. Connection control",
+    fn
+      0 -> :disconnected
+      1 -> :connected
+    end
+  field :wmax_lim_pct,           :uint16,   40243, 1, :rw, "Set power output to specified level (%WMax)"
+  field :wmax_lim_pct_win_tims,  :uint16,   40244, 1, :rw, "Time window for power limit change (0-300 seconds)"
+  field :wmax_lim_pct_rvrt_tims, :uint16,   40245, 1, :rw, "Timeout period for power limit change (0-28,800 seconds)"
+  field :wmax_lim_pct_rmp_tims,  :not_impl, 40246, 1, :r,  "Ramp time for moving from current setpoint to new setpoint (Not Supported)"
+  field :wmax_lim_ena,           :enum16,   40247, 1, :rw, "Enumerated value. Throttle enable/disable control",
+    fn
+      0 -> :disabled
+      1 -> :enabled
+    end
+
+
+  field :out_pf_set,          :int16,  40248, 1, :rw, "OutPF Set_SF Set power factor to specific value – cosine of angle (cos())"
+  field :out_pf_set_win_tms,  :uint16, 40249, 1, :rw, "Secs Time window for power factor change 0–300"
+  field :out_pf_set_rvrt_tms, :uint16, 40250, 1, :rw, "Secs Timeout period for pow- er factor 0–28800"
+  field :out_pf_set_rmp_tms,  :uint16, 40251, 1, :r,  "Secs Ramp time for moving from current setpoint to new setpoint Not support- ed"
+  field :out_pf_set_ena,      :enum16, 40252, 1, :rw, "Enumerated value. Fixed power factor en- able/disable control Disabled Enabled 0 1",
+    fn
+      0 -> :disabled
+      1 -> :enabled
+    end
+  field :var_wmax_pct,        :int16,  40253, 1, :rw, "% WMax VArWMaxPct_SF Reactive power in percent of WMax Not supported"
+  field :var_max_pct,         :int16,  40254, 1, :rw, "% VAr- Max VArPct _SF Reactive power in per- cent of VArMax"
+  field :var_aval_pct,        :int16,  40255, 1, :rw, "% VAr- Aval VArPct _SF Reactive power in per- cent of VArAval Not support- ed"
+  field :var_pct_win_tms,     :uint16, 40256, 1, :rw, "Secs Time window for VAR limit change 0–300"
+  field :var_pct_rvrt_tms,    :uint16, 40257, 1, :r,  "Secs Timeout period for VAR limit 0–28800"
+  field :var_pct_rmp_t,       :uint16, 40258, 1, :rw, "ms  Secs Ramp time for moving from current setpoint to new setpoint Not support- ed"
+  field :var_pct_mod,         :enum16, 40259, 1, :r,  "Enumerated value. VAR limit mode 2: VAR limit as a % of VArMax",
+    fn
+      2 -> :var_limit_as_pct_of_varmax
+    end
+  field :var_pct_ena,         :enum16, 40260, 1, :rw, "Enumerated value. Fixed VAR enable/dis- able control Disabled Enabled 0 1",
+    fn
+      0 -> :disabled
+      1 -> :enabled
+    end
+  field :wmax_lim_pct_sf,     :sunssf, 40261, 1, :r, "Scale factor for power output percent -2"
+  field :out_pf_set_sf,       :sunssf, 40262, 1, :r, "Scale factor for power factor -3"
+  field :var_pct_sf,          :sunssf, 40263, 1, :r, "Scale factor for reactive power 0"
 end

@@ -7,9 +7,13 @@ defmodule ExModbus do
     quote do
       Module.register_attribute __MODULE__, :locales, accumulate: true,
                                                       persist: false
-      import unquote(__MODULE__), only: [field: 6, field: 7]
+      import unquote(__MODULE__), only: [field: 6, field: 7, to_bytes: 2]
     end
   end
+
+  def to_bytes(data, :int16), do: <<data::signed-integer-size(16)>>
+  def to_bytes(data, :uint16), do: <<data::unsigned-integer-size(16)>>
+  def to_bytes(data, :enum16, map), do: <<Map.get(map, data, data)::unsigned-integer-size(16)>>
 
   defmacro field(name, type, addr, num_bytes, perms, desc) do
     quote do
@@ -34,6 +38,28 @@ defmodule ExModbus do
             end
           other ->
             IO.puts inspect other
+        end
+      end
+    end
+
+    if(:rw == perms) do
+      quote do
+        @doc """
+        # Description:
+
+        unquote(desc)
+
+        * Field Type: unquote(type)
+        """
+
+        # if readable
+        def unquote(String.to_atom("set_" <> Atom.to_string name))(pid, slave_id, data) do
+          case ExModbus.Client.write_multiple_registers(pid, slave_id, unquote(addr - 1), to_bytes(data, unquote(type))) do
+            {:ok, %{data: {:write_multiple_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
+              {:ok, %{data: data, transaction_id: transaction_id, slave_id: unit_id}}
+            other ->
+              IO.puts inspect other
+          end
         end
       end
     end
@@ -66,4 +92,6 @@ defmodule ExModbus do
       end
     end
   end
+
+
 end

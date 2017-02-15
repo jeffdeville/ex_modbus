@@ -31,6 +31,23 @@ defmodule ExModbusTest do
     test "can read type: enum16", %{pid: pid, slave_id: slave_id} do
       assert {:ok, %{data: nil}} = Fronius.st_vnd(pid, slave_id)
     end
+  end
 
+  describe "to_bytes\2" do
+    test "can map int16" do
+      assert ExModbus.to_bytes(10, :int16) == <<0, 10>>
+      assert ExModbus.to_bytes(-10, :int16) == <<255, 246>>
+    end
+
+    test "can map uint16" do
+      assert ExModbus.to_bytes(10, :uint16) == <<0, 10>>
+    end
+
+    test "can map enum16" do
+      assert ExModbus.to_bytes(1, :enum16, %{disabled: 0, enabled: 1}) == <<0, 1>>
+      assert ExModbus.to_bytes(0, :enum16, %{disabled: 0, enabled: 1}) == <<0, 0>>
+      assert ExModbus.to_bytes(:enabled, :enum16, %{disabled: 0, enabled: 1}) == <<0, 1>>
+      assert ExModbus.to_bytes(:disabled, :enum16, %{disabled: 0, enabled: 1}) == <<0, 0>>
+    end
   end
 end

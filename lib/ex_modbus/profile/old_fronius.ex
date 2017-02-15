@@ -25,11 +25,12 @@ defmodule ExModbus.Types do
 
     {:ok, res}
   end
-  def convert_type(data, type) do
-    require IEx; IEx.pry
-    IO.puts inspect "Unable to convert type: #{type}"
-    {:type_conversion_error, type}
-  end
+  def convert_type(data, type), do: {:type_conversion_error, type}
+
+  # ---------------------------------------------
+
+  # ideally, I could have a macro that just mapped :int16 -> unsigned-integer-size INSIDE the binary match
+  # def map_data(value, :int16), do: <<resp::unsigned-integer-size(16)>> = value
 end
 
 defmodule ExModbus.Fronius do
