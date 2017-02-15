@@ -74,18 +74,18 @@ defmodule ExModbus.TestInverter do
     fn
       0  -> nil
       1  -> :off
-      2  -> :auto_shutdown
+      2  -> :sleeping
       3  -> :starting
-      4  -> :normal
-      5  -> :power_reduction_active
+      4  -> :mppt
+      5  -> :throttled
       6  -> :shutting_down
       7  -> :fault
       8  -> :standby
-      9  -> :no_solarnet
-      10 -> :no_inverter_comms
-      11 -> :overcurren
-      12 -> :updating
-      13 -> :arcdetection
+      9  -> :no_businit
+      10 -> :no_comm_inv
+      11 -> :sn_overcurrent
+      12 -> :bootload
+      13 -> :afci
     end
   field :evt1,              :uint32,  40120, 2, :r, "Bit field Event flags (bits 0–31) (custom - can be downloaded from Fronius website)"
   field :evt2,              :uint32,  40122, 2, :r, "Bit field Event flags (bits 32–63) (custom - can be downloaded from Fronius website)"
