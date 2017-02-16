@@ -29,7 +29,8 @@ defmodule ExModbusTest do
     end
 
     test "can read type: enum16", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: nil}} = Fronius.st_vnd(pid, slave_id)
+      assert {:enum_not_found_error, %{}} = Fronius.st_vnd(pid, slave_id)
+      # assert {:ok, %{data: nil}} = Fronius.st_vnd(pid, slave_id)
     end
   end
 

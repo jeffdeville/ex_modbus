@@ -54,10 +54,7 @@ defmodule ExModbus do
           {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
         else
           {:type_conversion_error, type} -> {:type_conversion_error, type}
-          :error ->
-            {:ok, %{data: {:read_holding_registers, value}}} = ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes))
-            Logger.error "Unable to map #{value} in lookup table #{inspect unquote(data_map)}"
-            {:error, "Unable to map #{value} in lookup table #{inspect unquote(data_map)}" }
+          {:enum_not_found_error, message} -> {:enum_not_found_error, message}
         end
       end
     end
@@ -84,5 +81,10 @@ defmodule ExModbus do
   end
 
   def map_enum_value([], value), do: {:ok, value}
-  def map_enum_value(data_map, value), do: Keyword.fetch(data_map, value)
+  def map_enum_value(data_map, value) do
+    case Enum.at(data_map, value) do
+      nil -> {:enum_not_found_error, "#{inspect data_map} either has no member #{value}, or it is out of range"}
+      val -> val
+    end
+  end
 end
