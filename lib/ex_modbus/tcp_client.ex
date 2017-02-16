@@ -12,6 +12,13 @@ defmodule ExModbus.TcpClient do
   defdelegate wrap_packet(packet, unit_id), to: Modbus.Tcp
   defdelegate unwrap_packet(packet), to: Modbus.Tcp
 
+  def connect(%{host: host, port: port} = args) do
+    case :gen_tcp.connect(String.to_charlist(host), port, [:binary, {:active, false}]) do
+      {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
+      {:error, _} -> {:backoff, 1000, args}
+    end
+  end
+
   def connect(%{ip: ip, port: port} = args) do
     case :gen_tcp.connect(ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}

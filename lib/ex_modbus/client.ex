@@ -7,8 +7,10 @@ defmodule ExModbus.Client do
   # testing
   def start_link(%{strategy: strategy} = args, opts), do: Connection.start_link(ExModbus.Client, args, opts)
   # TCP
-  def start_link(%{ip: ip, port: port}, opts), do: start_link(%{ip: ip, port: port, strategy: ExModbus.TcpClient}, opts)
-  def start_link(%{ip: ip}, opts), do: start_link(%{ip: ip, port: Modbus.Tcp.port, strategy: ExModbus.TcpClient}, opts)
+  def start_link(%{host: host, port: port}, opts), do: start_link(%{host: host, port: port, strategy: ExModbus.TcpClient}, opts)
+  def start_link(%{host: host}, opts),             do: start_link(%{host: host, port: Modbus.Tcp.port, strategy: ExModbus.TcpClient}, opts)
+  def start_link(%{ip: ip, port: port}, opts),     do: start_link(%{ip: ip,     port: port, strategy: ExModbus.TcpClient}, opts)
+  def start_link(%{ip: ip}, opts),                 do: start_link(%{ip: ip,     port: Modbus.Tcp.port, strategy: ExModbus.TcpClient}, opts)
   # RTU
   def start_link(%{tty: _tty, speed: _speed} = args, opts) do
     args = Map.merge(args, %{strategy: ExModbus.RtuClient})

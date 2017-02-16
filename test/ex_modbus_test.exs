@@ -4,7 +4,12 @@ defmodule ExModbusTest do
 
   describe "reading data, function 03" do
     setup do
-      {:ok, pid} = ExModbus.Client.start_link(%{ip: {10, 0, 1, 3}})
+      {:ok, pid} = case System.get_env("SLAVE_HOST") do
+        nil ->
+          {:ok, [{ip, _, _} | rest]} = :inet.getif()
+          ExModbus.Client.start_link(%{ip: ip})
+        host -> ExModbus.Client.start_link(%{host: host})
+      end
       {:ok, %{pid: pid, slave_id: 1}}
     end
 

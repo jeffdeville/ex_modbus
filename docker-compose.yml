@@ -1,0 +1,14 @@
+version: "2"
+services:
+  ex_modbus:
+    image: jeffdeville/ex_modbus:latest
+    depends_on:
+      - modbusslave
+    environment:
+      - SLAVE_HOST=modbusslave
+    command: mix test
+
+  modbusslave:
+    image: jeffdeville/modbus_slave_simulator
+    expose:
+      - "502"
