@@ -2,7 +2,7 @@ FROM python:2.7-alpine
 MAINTAINER Jeff Deville
 
 RUN apk --update add alpine-sdk
-
+EXPOSE 502
 ENV REFRESHED_AT 2017-02-16_17:38
 
 # Download and run modsim

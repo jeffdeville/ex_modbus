@@ -7,8 +7,8 @@ defmodule ExModbusTest do
       {:ok, pid} = case System.get_env("SLAVE_HOST") do
         nil ->
           {:ok, [{ip, _, _} | rest]} = :inet.getif()
-          ExModbus.Client.start_link(%{ip: ip})
-        host -> ExModbus.Client.start_link(%{host: host})
+          ExModbus.Client.start_link(%{ip: ip, port: 5002})
+        host -> ExModbus.Client.start_link(%{host: host, port: 5002})
       end
       {:ok, %{pid: pid, slave_id: 1}}
     end
@@ -35,7 +35,6 @@ defmodule ExModbusTest do
 
     test "can read type: enum16", %{pid: pid, slave_id: slave_id} do
       assert {:enum_not_found_error, %{}} = Fronius.st_vnd(pid, slave_id)
-      # assert {:ok, %{data: nil}} = Fronius.st_vnd(pid, slave_id)
     end
   end
 
