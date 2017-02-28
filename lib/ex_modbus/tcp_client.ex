@@ -12,17 +12,12 @@ defmodule ExModbus.TcpClient do
   defdelegate wrap_packet(packet, unit_id), to: Modbus.Tcp
   defdelegate unwrap_packet(packet), to: Modbus.Tcp
 
-  def connect(%{host: host, port: port} = args) do
-    case :gen_tcp.connect(String.to_charlist(host), port, [:binary, {:active, false}]) do
+  def connect(%{ip: {_, _, _, _} = ip, port: port}), do: do_connect(%{host_or_ip: ip, port: port})
+  def connect(%{host: host, port: port}), do: do_connect(%{host_or_ip: String.to_charlist(host), port: port})
+  def do_connect(%{host_or_ip: host_or_ip, port: port}) do
+    case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, _} -> {:backoff, 1000, args}
-    end
-  end
-
-  def connect(%{ip: ip, port: port} = args) do
-    case :gen_tcp.connect(ip, port, [:binary, {:active, false}]) do
-      {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, _} -> {:backoff, 1000, args}
+      {:error, _} -> {:backoff, 1000, %{host_or_ip: host_or_ip, port: port}}
     end
   end
 
@@ -37,8 +32,6 @@ defmodule ExModbus.TcpClient do
   end
 
   def command(msg, socket, unit_id) do
-    # NOTE - I can't use 'with' on elixir versions below 1.3, so I
-    # need to rewrite this
     with wrapped_packet = wrap_packet(msg, unit_id),
          {:ok, resp_packet} <- send_receive(wrapped_packet, socket),
          Logger.debug("Response: #{inspect resp_packet}"),
@@ -64,12 +57,6 @@ defmodule ExModbus.TcpClient do
     :gen_tcp.recv(socket, 0, @read_timeout)
     # {:ok, packet} = :gen_tcp.recv(socket, 0, @read_timeout)
     # XXX - handle {:error, closed} and try to reconnect
-    # Logger.debug "Response: #{inspect packet}"
-
-    # Should not be doing this work here either. Let the client call back out to the strategy
-    # unwrapped = Modbus.Tcp.unwrap_packet(packet)
-    # {:ok, data} = Modbus.Packet.parse_response_packet(unwrapped.packet)
-    # %{unit_id: unwrapped.unit_id, transaction_id: unwrapped.transaction_id, data: data}
   end
 end
 

@@ -1,37 +1,3 @@
-defmodule ExModbus.Types do
-  # def convert_type(data, "uint16"), do: convert_type(data, String.to_atom("unsigned-integer-size(16)"))
-
-  # def convert_type(<<float::>>, "float32"), do: {:ok, float}
-  # Eventually, I'll want to look this value up in the bitfield lookups I can define.
-  def convert_type(<<bitfield::unsigned-integer-size(32)>>, :bitfield32), do: {:ok, bitfield}
-  # Eventually, I'll want to look this value up in the enum blocks I can define.
-  def convert_type(<<int::signed-integer-size(16)>>, :int16), do: {:ok, int}
-  def convert_type(<<uint::unsigned-integer-size(16)>>, :enum16), do: {:ok, uint}
-  def convert_type(<<uint::unsigned-integer-size(16)>>, :uint16), do: {:ok, uint}
-  def convert_type(<<uint::unsigned-integer-size(32)>>, :uint32), do: {:ok, uint}
-  def convert_type(<<scale_factor::signed-integer-size(16)>>, :sunssf), do: {:ok, scale_factor}
-
-  def convert_type(<<flt::float-size(32)>>, :float32), do: {:ok, flt}
-  def convert_type(<<flt::float-size(16)>>, :float16), do: {:ok, flt}
-
-  def convert_type(data, :string32), do: convert_type(data, :string)
-  def convert_type(data, :string16), do: convert_type(data, :string)
-  def convert_type(data, <<"String", _size::binary>>), do: convert_type(data, :string)
-  def convert_type(data, :string) do
-    res = data
-    |> :binary.bin_to_list
-    |> Enum.filter(fn(byte) -> byte != 0 end)
-    |> to_string
-
-    {:ok, res}
-  end
-  def convert_type(data, type), do: {:type_conversion_error, type}
-
-  # ---------------------------------------------
-
-  # ideally, I could have a macro that just mapped :int16 -> unsigned-integer-size INSIDE the binary match
-  # def map_data(value, :int16), do: <<resp::unsigned-integer-size(16)>> = value
-end
 
 defmodule ExModbus.Fronius do
   alias ExModbus.Client

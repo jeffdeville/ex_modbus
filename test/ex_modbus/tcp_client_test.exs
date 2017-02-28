@@ -3,18 +3,13 @@ defmodule TcpClientTest do
   use ExUnit.Case
 
   describe "connect\1" do
-    test "when just an ip is provided, the port is 502" do
-      # Must await use of Connection, because the connection won't fire on
-      # init, then. right now it does, and I can't listen on 502 without sudo.
-    end
-
     test "when a port is provided, it overrides the default" do
-      {:ok, listen_socket} = :gen_tcp.listen(5003, [:binary, packet: :raw, active: false, reuseaddr: true])
+      {:ok, _listen_socket} = :gen_tcp.listen(5003, [:binary, packet: :raw, active: false, reuseaddr: true])
       assert {:ok, {_socket, ExModbus.TcpClient}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
     end
 
     test "if no connection possible, backoff" do
-      assert {:backoff, 1000, %{ip: {127, 0, 0, 1}, port: 5003}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
+      assert {:backoff, 1000, %{host_or_ip: {127, 0, 0, 1}, port: 5003}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
     end
   end
 
@@ -28,8 +23,8 @@ defmodule TcpClientTest do
 
     test "when data is retrieved successfully", %{socket: socket} do
       data = <<3, 15, 160, 0, 2>>
-      expected_response = %{unit_id: 1, transaction_id: 1, data: data }
-      assert {:ok, expected_response} = TcpClient.command(data, socket, 1)
+      expected_response = %{data: {:read_holding_registers, <<160, 0, 2>>}, unit_id: 1, transaction_id: 1}
+      assert {:ok, ^expected_response} = TcpClient.command(data, socket, 1)
     end
 
     test "when data can not be retrieved", %{socket: socket} do

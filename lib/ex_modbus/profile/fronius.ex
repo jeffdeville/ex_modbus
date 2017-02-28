@@ -1,4 +1,7 @@
 defmodule ExModbus.Profiles.Fronius do
+  @moduledoc """
+  Fronius client in Floating Point mode
+  """
   use ExModbus
   # C001, Common
   field :manufacturer,   :string32, 40005, 16, :r, "(Mn Units:  SF: ) Manufacturer - Range: Fronius"
@@ -26,12 +29,12 @@ defmodule ExModbus.Profiles.Fronius do
   field :pf,                :float32, 40100, 2, :r,  "(%) Power factor"
   field :wh,                :float32, 40102, 2, :r,  "(Wh) AC lifetime energy pro- duction"
   field :dca,               :float32, 40104, 2, :r,  "(A) DC current value - DC current only if one MPPT available; with multiple MPPT 'not implemented'"
-  field :dcv,               :float32, 40106, 2, :r, "V DC voltage value DC voltage only if one MPPT avail- able; with multiple MPPT “not implement- ed”"
-  field :dcw,               :float32, 40108, 2, :r, "W DC power value Total DC power of all available MPPT"
-  field :temp_cabinet,      :float32, 40110, 2, :r, "°C Cabinet temperature"
-  field :temp_heat_sink,    :float32, 40112, 2, :r, "°C Coolant or heat sink temperature"
-  field :temp_transformer,  :float32, 40114, 2, :r, "°C Transformer tempera- ture"
-  field :temp_other,        :float32, 40116, 2, :r, "°C Other temperature"
+  field :dcv,               :float32, 40106, 2, :r,  "V DC voltage value DC voltage only if one MPPT avail- able; with multiple MPPT “not implement- ed”"
+  field :dcw,               :float32, 40108, 2, :r,  "W DC power value Total DC power of all available MPPT"
+  field :temp_cabinet,      :float32, 40110, 2, :r,  "°C Cabinet temperature"
+  field :temp_heat_sink,    :float32, 40112, 2, :r,  "°C Coolant or heat sink temperature"
+  field :temp_transformer,  :float32, 40114, 2, :r,  "°C Transformer tempera- ture"
+  field :temp_other,        :float32, 40116, 2, :r,  "°C Other temperature"
   # SunSpec State Codes
   # Name                  Value  Description
   # I_STATUS_OFF            1    Inverter is off
@@ -100,47 +103,47 @@ defmodule ExModbus.Profiles.Fronius do
   field :MaxDisChaRte_SF, :sunssf, 40158, 1, :r, "Scale factor Not supported"
 
   # Basic Settings (IC121)
-  field :PFMinQ1,      :int16,   40159+14, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 1. Default to PFRtgQ1"
-  field :PFMinQ2,      :int16,   40159+15, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 2. Default to PFRtgQ2 Not supported"
-  field :PFMinQ3,      :int16,   40159+16, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 3. Default to PFRtgQ3 Not supported"
-  field :PFMinQ4,      :int16,   40159+17, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 4. Default to PFRtgQ4"
-  field :VArAct,       :enum16,  40159+18, 1, :r, "VAR action on change between charging and discharging. Not supported", ~w(nil switch maintain)a
-  field :ClcTotVA,     :enum16,  40159+19, 1, :r, "Calculation method for total apparent power. Not supported", ~w(nil vector arithmetic)a
-  field :MaxRmpRte,    :uint16,  40159+20, 1, :r, "% WGra MaxRmpRte_S F Setpoint for maximum ramp rate as percentage of nominal maximum ramp rate. This setting will limit the rate that watts delivery to the grid can increase or decrease in response to intermittent PV generation Not supported"
-  field :ECPNomHz,     :uint16,  40159+21, 1, :r, "Hz ECPNomHz_SF Setpoint for nominal frequency at the ECP Not supported"
-  field :ConnPh,       :enum16,  40159+22, 1, :r, "Identity of connected phase for single phase inverters. Not supported", ~w(nil A B C)a
-  field :WMax_SF,      :sunssf,  40159+23, 1, :r, "Scale factor for maximum power output 1"
-  field :VRef_SF,      :sunssf,  40159+24, 1, :r, "Scale factor for voltage at the PCC 0"
-  field :VRefOfs_SF,   :sunssf,  40159+25, 1, :r, "Scale factor for offset voltage 0"
-  field :VMinMax_SF,   :sunssf,  40159+26, 1, :r, "Scale factor for min/max voltages 0"
-  field :VAMax_SF,     :sunssf,  40159+27, 1, :r, "Scale factor for voltage at the PCC 1"
-  field :VARMax_SF,    :sunssf,  40159+28, 1, :r, "Scale factor for reactive power 1"
-  field :WGra_SF,      :sunssf,  40159+29, 1, :r, "Scale factor for default ramp rate Not supported"
-  field :PFMin_SF,     :sunssf,  40159+30, 1, :r, "Scale factor for minimum power factor -3"
-  field :MaxRmpRte_SF, :sunssf,  40159+31, 1, :r, "Scale factor for maximum ramp percentage Not supported"
-  field :ECPNomHz_SF,  :sunssf,  40159+32, 1, :r, "Scale factor for nominal frequency Not supported"
+  field :pf_min_q1,      :int16,   40159+14, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 1. Default to PFRtgQ1"
+  field :pf_min_q2,      :int16,   40159+15, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 2. Default to PFRtgQ2 Not supported"
+  field :pf_min_q3,      :int16,   40159+16, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 3. Default to PFRtgQ3 Not supported"
+  field :pf_min_q4,      :int16,   40159+17, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 4. Default to PFRtgQ4"
+  field :var_act,        :enum16,  40159+18, 1, :r, "VAR action on change between charging and discharging. Not supported", ~w(nil switch maintain)a
+  field :clc_tot_va,     :enum16,  40159+19, 1, :r, "Calculation method for total apparent power. Not supported", ~w(nil vector arithmetic)a
+  field :max_rmp_rte,    :uint16,  40159+20, 1, :r, "% WGra MaxRmpRte_S F Setpoint for maximum ramp rate as percentage of nominal maximum ramp rate. This setting will limit the rate that watts delivery to the grid can increase or decrease in response to intermittent PV generation Not supported"
+  field :ecp_nom_hz,     :uint16,  40159+21, 1, :r, "Hz ECPNomHz_SF Setpoint for nominal frequency at the ECP Not supported"
+  field :conn_ph,        :enum16,  40159+22, 1, :r, "Identity of connected phase for single phase inverters. Not supported", ~w(nil A B C)a
+  field :w_max_sf,       :sunssf,  40159+23, 1, :r, "Scale factor for maximum power output 1"
+  field :vref_sf,        :sunssf,  40159+24, 1, :r, "Scale factor for voltage at the PCC 0"
+  field :vref_ofs_sf,    :sunssf,  40159+25, 1, :r, "Scale factor for offset voltage 0"
+  field :v_min_max_sf,   :sunssf,  40159+26, 1, :r, "Scale factor for min/max voltages 0"
+  field :va_max_sf,      :sunssf,  40159+27, 1, :r, "Scale factor for voltage at the PCC 1"
+  field :var_max_sf,     :sunssf,  40159+28, 1, :r, "Scale factor for reactive power 1"
+  field :wgra_sf,        :sunssf,  40159+29, 1, :r, "Scale factor for default ramp rate Not supported"
+  field :pf_min_sf,      :sunssf,  40159+30, 1, :r, "Scale factor for minimum power factor -3"
+  field :max_rmp_rte_sf, :sunssf,  40159+31, 1, :r, "Scale factor for maximum ramp percentage Not supported"
+  field :ecp_nom_hz_sf,  :sunssf,  40159+32, 1, :r, "Scale factor for nominal frequency Not supported"
 
   # Extended Measurements & Status Model (IC122)
-  field :PVConn,       :bitfield16, 40237+3,  1, :r, "PV inverter present/ available status. Enumerated value Connected Available Operating Test Bit 0 = 1 Bit 1 = 1 Bit 2 = 1 Bit 3 = 1"
-  field :StorConn,     :bitfield16, 40237+4,  1, :r, "Storage inverter present/available status. Enumerated value Not supported"
-  field :ECPConn,      :bitfield16, 40237+5,  1, :r, "ECP connection status Connected Bit 0 = 1"
-  field :ActWh,        :acc64,      40237+6,  4, :r, "Wh AC lifetime active (real) energy output"
-  field :ActVAh,       :acc64,      40237+10, 4, :r, "VAh AC lifetime apparent energy output Not supported"
-  field :ActVArhQ1,    :acc64,      40237+14, 4, :r, "varh AC lifetime reactive energy output in quadrant 1 Not supported"
-  field :ActVArhQ2,    :acc64,      40237+18, 4, :r, "varh AC lifetime reactive energy output in quadrant 2 Not supported"
-  field :ActVArhQ3,    :acc64,      40237+22, 4, :r, "varh AC lifetime negative energy output in quadrant 3 Not supported"
-  field :ActVArhQ4,    :acc64,      40237+26, 4, :r, "varh AC lifetime reactive energy output in quadrant 4 Not supported"
-  field :VArAval,      :int16,      40237+30, 1, :r, "var VArAval_SF Number of VARs available without impacting watts output Not supported"
-  field :VArAval_SF,   :sunssf,     40237+31, 1, :r, "Scale factor for available VARs Not supported"
-  field :WAval,        :uint16,     40237+32, 1, :r, "W WAval_ SF Number of Watts available Not supported"
-  field :WAval_SF,     :sunssf,     40237+33, 1, :r, "Scale factor for available Watts Not supported"
-  field :StSetLimMsk,  :bitfield32, 40237+34, 2, :r, "Bit mask indicating setpoint limit(s) reached. Bits are persistent and must be cleared by the controller Not supported"
-  field :StActCtl,     :bitfield32, 40237+36, 2, :r, "Bit mask indicating which inverter controls are currently active FixedW FixedVAR FixedPF Bit 0 = 1 Bit 1 = 1 Bit 2 = 1"
-  field :TmSrc,        :string,     40237+38, 4, :r, "Source of time synchronization RTC"
-  field :Tms,          :uint32,     40237+42, 2, :r, "Secs Seconds since 01-012000 00:00 UTC"
-  field :RtSt,         :bitfield16, 40237+44, 1, :r, "Bit mask indicating which voltage ride through modes are currently active 0"
-  field :Riso,         :uint16,     40237+45, 1, :r, "Ohm Riso_S F Isolation resistance Not supported"
-  field :Riso_SF,      :int16,      40237+46, 1, :r, "Scale factor for isolation resistance Not supported"
+  field :pv_conn,        :bitfield16, 40237+3,  1, :r, "PV inverter present/ available status. Enumerated value Connected Available Operating Test Bit 0 = 1 Bit 1 = 1 Bit 2 = 1 Bit 3 = 1"
+  field :stor_conn,      :bitfield16, 40237+4,  1, :r, "Storage inverter present/available status. Enumerated value Not supported"
+  field :ecp_conn,       :bitfield16, 40237+5,  1, :r, "ECP connection status Connected Bit 0 = 1"
+  field :act_wh,         :uint64,     40237+6,  4, :r, "Wh AC lifetime active (real) energy output (acc64)"
+  field :act_vah,        :uint64,     40237+10, 4, :r, "VAh AC lifetime apparent energy output Not supported (acc64)"
+  field :act_varh_q1,    :uint64,     40237+14, 4, :r, "varh AC lifetime reactive energy output in quadrant 1 Not supported (acc64)"
+  field :act_varh_q2,    :uint64,     40237+18, 4, :r, "varh AC lifetime reactive energy output in quadrant 2 Not supported (acc64)"
+  field :act_varh_q3,    :uint64,     40237+22, 4, :r, "varh AC lifetime negative energy output in quadrant 3 Not supported (acc64)"
+  field :act_varh_q4,    :uint64,     40237+26, 4, :r, "varh AC lifetime reactive energy output in quadrant 4 Not supported (acc64)"
+  field :var_aval,       :int16,      40237+30, 1, :r, "var VArAval_SF Number of VARs available without impacting watts output Not supported"
+  field :var_aval_sf,    :sunssf,     40237+31, 1, :r, "Scale factor for available VARs Not supported"
+  field :waval,          :uint16,     40237+32, 1, :r, "W WAval_ SF Number of Watts available Not supported"
+  field :waval_sf,       :sunssf,     40237+33, 1, :r, "Scale factor for available Watts Not supported"
+  field :st_set_lim_msk, :bitfield32, 40237+34, 2, :r, "Bit mask indicating setpoint limit(s) reached. Bits are persistent and must be cleared by the controller Not supported"
+  field :st_act_ctl,     :bitfield32, 40237+36, 2, :r, "Bit mask indicating which inverter controls are currently active FixedW FixedVAR FixedPF Bit 0 = 1 Bit 1 = 1 Bit 2 = 1"
+  field :tm_src,         :string,     40237+38, 4, :r, "Source of time synchronization RTC"
+  field :tms,            :uint32,     40237+42, 2, :r, "Secs Seconds since 01-012000 00:00 UTC"
+  field :rt_st,          :bitfield16, 40237+44, 1, :r, "Bit mask indicating which voltage ride through modes are currently active 0"
+  field :riso,           :uint16,     40237+45, 1, :r, "Ohm Riso_S F Isolation resistance Not supported"
+  field :riso_sf,        :int16,      40237+46, 1, :r, "Scale factor for isolation resistance Not supported"
 
   # Immediate Control Model (IC123)
   field :conn_win_tms,           :uint16,   40240, 1, :rw, "Time window for connect/disconnect (0-300 seconds)"
@@ -164,10 +167,8 @@ defmodule ExModbus.Profiles.Fronius do
   field :var_pct_mod,            :enum16,   40259, 1, :r,  "Enumerated value. VAR limit mode 2: VAR limit as a % of VArMax",
     ~w(nil nil var_limit_as_pct_of_varmax)
 
-  field :var_pct_ena,            :enum16,   40260, 1, :rw, "Enumerated value. Fixed VAR enable/dis- able control Disabled Enabled 0 1", ~w(disabled enabled)a
+  field :var_pct_ena,            :enum16,   40260, 1, :rw, "Enumerated value. Fixed VAR enable/disable control Disabled Enabled 0 1", ~w(disabled enabled)a
   field :wmax_lim_pct_sf,        :sunssf,   40261, 1, :r, "Scale factor for power output percent -2"
   field :out_pf_set_sf,          :sunssf,   40262, 1, :r, "Scale factor for power factor -3"
   field :var_pct_sf,             :sunssf,   40263, 1, :r, "Scale factor for reactive power 0"
-
-
 end
