@@ -9,12 +9,12 @@ defmodule TcpClientTest do
     end
 
     test "when a port is provided, it overrides the default" do
-      {:ok, listen_socket} = :gen_tcp.listen(5002, [:binary, packet: :raw, active: false, reuseaddr: true])
-      assert {:ok, {_socket, ExModbus.TcpClient}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5002})
+      {:ok, listen_socket} = :gen_tcp.listen(5003, [:binary, packet: :raw, active: false, reuseaddr: true])
+      assert {:ok, {_socket, ExModbus.TcpClient}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
     end
 
     test "if no connection possible, backoff" do
-      assert {:backoff, 1000, %{ip: {127, 0, 0, 1}, port: 5002}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5002})
+      assert {:backoff, 1000, %{ip: {127, 0, 0, 1}, port: 5003}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
     end
   end
 
@@ -22,7 +22,7 @@ defmodule TcpClientTest do
     setup do
       {:ok, pid} = MockTcpSlave.start_link(nil)
       MockTcpSlave.listen(pid)
-      {:ok, {socket, _}} =  TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5002})
+      {:ok, {socket, _}} =  TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
       {:ok, %{socket: socket}}
     end
 

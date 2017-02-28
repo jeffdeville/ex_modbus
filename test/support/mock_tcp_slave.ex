@@ -7,7 +7,7 @@ defmodule MockTcpSlave do
   end
 
   def init(_args) do
-    :gen_tcp.listen(5002, [:binary, packet: :raw, active: false, reuseaddr: true])
+    :gen_tcp.listen(5003, [:binary, packet: :raw, active: false, reuseaddr: true])
   end
 
   def listen(pid) do
