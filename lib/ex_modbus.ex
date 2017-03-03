@@ -19,6 +19,7 @@ defmodule ExModbus do
   end
 
   def compile(fields) do
+    IO.puts "Modbus Compile"
     # TBD: Return AST for all fields at once
     ast = for {name, type, addr, num_bytes, perms, desc, data_map} <- fields do
       getter_ast = defgetter(name, type, addr, num_bytes, desc, data_map)
@@ -29,6 +30,7 @@ defmodule ExModbus do
     end
 
     quote do
+      def field_defs(), do: @fields
       unquote(ast)
     end
   end

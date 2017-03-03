@@ -6,6 +6,7 @@ defmodule ExModbus.Types do
   def convert_type(<<uint::unsigned-integer-size(16)>>,     :uint16),     do: {:ok, uint}
   def convert_type(<<uint::unsigned-integer-size(32)>>,     :uint32),     do: {:ok, uint}
   def convert_type(<<sf::signed-integer-size(16)>>,         :sunssf),     do: {:ok, sf}
+  def convert_type(<<sf::signed-integer-size(32)>>,         :sunssf),     do: {:ok, sf}
   def convert_type(<<flt::float-size(32)>>,                 :float32),    do: {:ok, flt}
   def convert_type(data, :string32), do: convert_type(data, :string)
   def convert_type(data, :string16), do: convert_type(data, :string)

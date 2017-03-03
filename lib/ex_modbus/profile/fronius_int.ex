@@ -1,8 +1,6 @@
-defmodule ExModbus.Profiles.Fronius do
-  @moduledoc """
-  Fronius client in Floating Point mode
-  """
+defmodule ExModbus.Profiles.FroniusInt do
   use ExModbus
+
   # C001, Common
   field :manufacturer,   :string32, 40005, 16, :r, "(Mn Units: SF:) Manufacturer Range: Fronius"
   field :model,          :string32, 40021, 16, :r, "(Md Units: SF:) Device model Range: z. B. IG+150V [3p]"
@@ -11,30 +9,52 @@ defmodule ExModbus.Profiles.Fronius do
   field :serial,         :string32, 40053, 16, :r, "(SN Units: SF:) Serialnumber of the inverter Range:"
   field :device_address, :uint16,   40069,  1, :r, "(DA Units: SF:) Modbus Device Address Range: 1-247"
 
-  # Inverter Model Float
-  field :ac,                :float32, 40072, 2, :r,  "(A) AC total current value"
-  field :aph_a,             :float32, 40074, 2, :r,  "(A) AC phase A current value"
-  field :aph_b,             :float32, 40076, 2, :r,  "(A) AC phase B current value"
-  field :aph_c,             :float32, 40078, 2, :r,  "(A) AC phase C current value"
-  field :ppv_ph_ab,         :float32, 40080, 2, :r,  "(V) AC voltage phase AB value"
-  field :ppv_ph_bc,         :float32, 40082, 2, :r,  "(V) AC voltage phase BC value"
-  field :ppv_ph_ca,         :float32, 40084, 2, :r,  "(V) AC voltage phase CA value"
-  field :ph_vph_a,          :float32, 40086, 2, :r,  "(V) AC voltage phase-A-toneutral value"
-  field :ph_vph_b,          :float32, 40088, 2, :r,  "(V) AC voltage phase-B-toneutral value"
-  field :ph_vph_c,          :float32, 40090, 2, :r,  "(V) AC voltage phase-C-toneutral value"
-  field :w,                 :float32, 40092, 2, :r,  "(W) AC power value"
-  field :hz,                :float32, 40094, 2, :r,  "(Hz) AC frequency value"
-  field :va,                :float32, 40096, 2, :r,  "(VA) Apparent power"
-  field :v_ar,              :float32, 40098, 2, :r,  "(VAr) Reactive power"
-  field :pf,                :float32, 40100, 2, :r,  "(%) Power factor"
-  field :wh,                :float32, 40102, 2, :r,  "(Wh) AC lifetime energy production"
-  field :dca,               :float32, 40104, 2, :r,  "(A) DC current value DC current only if one MPPT available; with multiple MPPT 'not implemented'"
-  field :dcv,               :float32, 40106, 2, :r,  "V DC voltage value DC voltage only if one MPPT available; with multiple MPPT “not implemented”"
-  field :dcw,               :float32, 40108, 2, :r,  "W DC power value Total DC power of all available MPPT"
-  field :temp_cabinet,      :float32, 40110, 2, :r,  "°C Cabinet temperature"
-  field :temp_heat_sink,    :float32, 40112, 2, :r,  "°C Coolant or heat sink temperature"
-  field :temp_transformer,  :float32, 40114, 2, :r,  "°C Transformer temperature"
-  field :temp_other,        :float32, 40116, 2, :r,  "°C Other temperature"
+  # Inverter Model INT+SF
+  field :ac,                :uint16,  40072, 1, :r,  "(A) AC total current value"
+  field :aph_a,             :uint16,  40073, 1, :r,  "(A) AC phase A current value"
+  field :aph_b,             :uint16,  40074, 1, :r,  "(A) AC phase B current value"
+  field :aph_c,             :uint16,  40075, 1, :r,  "(A) AC phase C current value"
+  field :a_sf,              :sunssf,  40076, 2, :r,  "AC current scale factor"
+
+  field :ppv_ph_ab,         :uint16,  40077, 1, :r,  "(V) AC voltage phase AB value"
+  field :ppv_ph_bc,         :uint16,  40078, 1, :r,  "(V) AC voltage phase BC value"
+  field :ppv_ph_ca,         :uint16,  40079, 1, :r,  "(V) AC voltage phase CA value"
+  field :ph_vph_a,          :uint16,  40080, 1, :r,  "(V) AC voltage phase-A-toneutral value"
+  field :ph_vph_b,          :uint16,  40081, 1, :r,  "(V) AC voltage phase-B-toneutral value"
+  field :ph_vph_c,          :uint16,  40082, 1, :r,  "(V) AC voltage phase-C-toneutral value"
+  field :v_sf,              :sunssf,  40083, 1, :r,  "AC voltage scale factor"
+
+  field :w,                 :uint16,  40084, 1, :r,  "(W) AC power value"
+  field :w_sf,              :uint16,  40085, 1, :r,  "AC power scale factor"
+
+  field :hz,                :uint16,  40086, 1, :r,  "(Hz) AC frequency value"
+  field :hz_sf,             :uint16,  40087, 1, :r,  "Scale factor"
+
+  field :va,                :uint16,  40088, 1, :r,  "(VA) Apparent power"
+  field :va_sf,             :sunssf,  40089, 1, :r,  "Scale Factor"
+
+  field :var,               :int16,   40090, 1, :r,  "(VAr) Reactive power"
+  field :var_sf,            :sunssf,  40091, 1, :r,  "Scale Factor"
+
+  field :pf,                :int16,   40092, 1, :r,  "(%) Power factor"
+  field :pf_sf,             :sunssf,  40093, 1, :r,  "Scale Factor"
+
+  field :wh,                :uint32,  40094, 2, :r,  "(Wh) AC lifetime energy production"
+  field :wh_sf,             :sunssf,  40096, 1, :r,  "Scale Factor"
+
+  field :dca,               :uint16,  40097, 1, :r,  "(A) DC current value DC current only if one MPPT available; with multiple MPPT 'not implemented'"
+  field :dca_sf,            :sunssf,  40098, 1, :r,  "Scale Factor"
+
+  field :dcv,               :uint16,  40099, 1, :r,  "V DC voltage value DC voltage only if one MPPT available; with multiple MPPT “not implemented”"
+  field :dcv_sf,            :sunssf,  40100, 1, :r,  "Scale Factor"
+
+  field :dcw,               :int16,   40101, 1, :r,  "W DC power value Total DC power of all available MPPT"
+  field :dcw_sf,            :sunssf,   40102, 1, :r,  "Scale Factor"
+
+  field :temp_heat_sink,    :int16,   40104, 1, :r,  "°C Tmp_SF Coolant or heat sink temperature Not supported"
+  field :temp_transformer,  :int16,   40105, 1, :r,  "°C Transformer temperature"
+  field :temp_other,        :int16,   40106, 1, :r,  "°C Other temperature"
+  field :temp_sf,           :sunssf,  40107, 1, :r,  "Scale Factor"
   # SunSpec State Codes
   # Name                  Value  Description
   # I_STATUS_OFF            1    Inverter is off
@@ -45,7 +65,7 @@ defmodule ExModbus.Profiles.Fronius do
   # I_STATUS_SHUTTING_DOWN  6    Inverter shutting down
   # I_STATUS_FAULT          7    One or more faults present, see St*or Evt* register
   # I_STATUS_STANDBY        8    Standby
-  field :st,                :enum16,  40118, 1, :r, "Enumerated Operating state (see SunSpec State Codes)",
+  field :st,                :enum16,  40108, 1, :r, "Enumerated Operating state (see SunSpec State Codes)",
         ~w(nil off sleeping starting mppt throttled shutting_down fault standby)a
 
 
@@ -64,17 +84,17 @@ defmodule ExModbus.Profiles.Fronius do
   # I_STATUS_SN_OVERCURRENT 11  Overcurrent detected on SolarNet plug
   # I_STATUS_BOOTLOAD       12  Inverter is currently being updated
   # I_STATUS_AFCI           13  AFCI event arcdetection
-  field :st_vnd, :enum16, 40119, 1, :r, "Enumerated Vendor defined operating state (See Fronius State Codes))",
+  field :st_vnd, :enum16, 40109, 1, :r, "Enumerated Vendor defined operating state (See Fronius State Codes))",
     ~w(nil off sleeping starting mppt throttled shutting_down fault standby no_businit no_comm_inv sn_overcurrent bootload afci)a
-  field :evt1,              :uint32,  40120, 2, :r, "Bit field Event flags (bits 0–31) (custom can be downloaded from Fronius website)"
-  field :evt2,              :uint32,  40122, 2, :r, "Bit field Event flags (bits 32–63) (custom can be downloaded from Fronius website)"
-  field :evt_vnd1,          :uint32,  40124, 2, :r, "Bit field Vendor defined event flags (bits 0–31) (custom can be downloaded from Fronius website)"
-  field :evt_vnd2,          :uint32,  40126, 2, :r, "Bit field Vendor defined event flags (bits 32–63) (custom can be downloaded from Fronius website)"
-  field :evt_vnd3,          :uint32,  40128, 2, :r, "Bit field Vendor defined event flags (bits 64–95) (custom can be downloaded from Fronius website)"
-  field :evt_vnd4,          :uint32,  40130, 2, :r, "Bit field Vendor defined event flags (bits 96–127) (custom can be downloaded from Fronius website)"
+  field :evt1,              :uint32,  40110, 2, :r, "Bit field Event flags (bits 0–31) (custom can be downloaded from Fronius website)"
+  field :evt2,              :uint32,  40112, 2, :r, "Bit field Event flags (bits 32–63) (custom can be downloaded from Fronius website)"
+  field :evt_vnd1,          :uint32,  40114, 2, :r, "Bit field Vendor defined event flags (bits 0–31) (custom can be downloaded from Fronius website)"
+  field :evt_vnd2,          :uint32,  40116, 2, :r, "Bit field Vendor defined event flags (bits 32–63) (custom can be downloaded from Fronius website)"
+  field :evt_vnd3,          :uint32,  40118, 2, :r, "Bit field Vendor defined event flags (bits 64–95) (custom can be downloaded from Fronius website)"
+  field :evt_vnd4,          :uint32,  40120, 2, :r, "Bit field Vendor defined event flags (bits 96–127) (custom can be downloaded from Fronius website)"
 
-  # Nameplate Model (IC120)
-  @nameplace_start 40131
+  # Nameplace Model (IC120) INT+SF
+  @nameplace_start 40121
   field :der_type,        :uint16, @nameplace_start + 3, 1, :r, "Type of DER device. Default value is 4 to indicate PV device"
   field :w_rtg,           :uint16, @nameplace_start + 4, 1, :r, "W WRtg_SF Continuous power output capability of the inverter"
   field :w_rtg_sf,        :sunssf, @nameplace_start + 5, 1, :r, "Scale factor 1"
@@ -102,7 +122,7 @@ defmodule ExModbus.Profiles.Fronius do
   field :MaxDisChaRte_SF, :sunssf, @nameplace_start + 27, 1, :r, "Scale factor Not supported"
 
   # Basic Settings (IC121)
-  @basic_start 40159
+  @basic_start 40149
   field :pf_min_q1,      :int16,   @basic_start + 14, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 1. Default to PFRtgQ1"
   field :pf_min_q2,      :int16,   @basic_start + 15, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 2. Default to PFRtgQ2 Not supported"
   field :pf_min_q3,      :int16,   @basic_start + 16, 1, :r, "cos() PFMin_ SF Setpoint for minimum power factor value in quadrant 3. Default to PFRtgQ3 Not supported"
@@ -124,7 +144,7 @@ defmodule ExModbus.Profiles.Fronius do
   field :ecp_nom_hz_sf,  :sunssf,  @basic_start + 32, 1, :r, "Scale factor for nominal frequency Not supported"
 
   # Extended Measurements & Status Model (IC122)
-  @extended_start 40191
+  @extended_start 40181
   field :pv_conn,        :bitfield16, @extended_start + 3,  1, :r, "PV inverter present/ available status. Enumerated value Connected Available Operating Test Bit 0 = 1 Bit 1 = 1 Bit 2 = 1 Bit 3 = 1"
   field :stor_conn,      :bitfield16, @extended_start + 4,  1, :r, "Storage inverter present/available status. Enumerated value Not supported"
   field :ecp_conn,       :bitfield16, @extended_start + 5,  1, :r, "ECP connection status Connected Bit 0 = 1"
@@ -147,7 +167,7 @@ defmodule ExModbus.Profiles.Fronius do
   field :riso_sf,        :int16,      @extended_start + 46, 1, :r, "Scale factor for isolation resistance Not supported"
 
   # Immediate Control Model (IC123)
-  @immediate_start 40237
+  @immediate_start 40227
   field :conn_win_tms,           :uint16,   @immediate_start + 3,  1, :rw, "Time window for connect/disconnect (0-300 seconds)"
   field :conn_rvrt_tims,         :uint16,   @immediate_start + 4,  1, :rw, "Timeout window for connect/disconnect (0-300 seconds)"
   field :conn,                   :enum16,   @immediate_start + 5,  1, :rw, "Enumerated value. Connection control", ~w(disconnected connected)a

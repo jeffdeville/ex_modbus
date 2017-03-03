@@ -1,6 +1,6 @@
 defmodule ExModbusTest do
   use ExUnit.Case
-  alias ExModbus.Profiles.Fronius
+  alias ExModbus.Profiles.FroniusInt
 
   describe "reading data, function 03" do
     setup do
@@ -14,27 +14,34 @@ defmodule ExModbusTest do
     end
 
     test "can read type: string16", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: "1.2.3"}} = Fronius.version(pid, slave_id)
+      assert {:ok, %{data: "1.2.3"}} = FroniusInt.version(pid, slave_id)
     end
 
     test "can read type: string32", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: "SunSpecText"}} = Fronius.manufacturer(pid, slave_id)
+      assert {:ok, %{data: "SunSpecText"}} = FroniusInt.manufacturer(pid, slave_id)
     end
 
     test "can read type: uint16", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: 1}} = Fronius.device_address(pid, slave_id)
+      assert {:ok, %{data: 1}} = FroniusInt.device_address(pid, slave_id)
     end
 
     test "can read type: uint32", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: 0}} = Fronius.evt1(pid, slave_id)
+      assert {:ok, %{data: 0}} = FroniusInt.evt1(pid, slave_id)
     end
 
     test "can read type: float32", %{pid: pid, slave_id: slave_id} do
-      assert {:ok, %{data: 1.2122900943140371e-37}} = Fronius.ac(pid, slave_id)
+      assert {:ok, %{data: 549}} = FroniusInt.ac(pid, slave_id)
+      assert {:ok, %{data: 2}} = FroniusInt.a_sf(pid, slave_id)
     end
 
     test "can read type: enum16", %{pid: pid, slave_id: slave_id} do
-      assert {:enum_not_found_error, "[nil, :off, :sleeping, :starting, :mppt, :throttled, :shutting_down, :fault, :standby, :no_businit, :no_comm_inv, :sn_overcurrent, :bootload, :afci] either has no member 0, or it is out of range"} = Fronius.st_vnd(pid, slave_id)
+      assert {:enum_not_found_error, "[nil, :off, :sleeping, :starting, :mppt, :throttled, :shutting_down, :fault, :standby, :no_businit, :no_comm_inv, :sn_overcurrent, :bootload, :afci] either has no member 0, or it is out of range"} = FroniusInt.st_vnd(pid, slave_id)
+    end
+
+    test "can write", %{pid: pid, slave_id: slave_id} do
+      IO.puts inspect FroniusInt.wmax_lim_pct(pid, slave_id)
+      assert {:ok, %{data: 1}} = FroniusInt.wmax_lim_pct(pid, slave_id)
+      FroniusInt.set_wmax_lim_pct(pid, slave_id, 50)
     end
   end
 
