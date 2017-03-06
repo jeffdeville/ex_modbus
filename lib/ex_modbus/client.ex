@@ -4,7 +4,7 @@ defmodule ExModbus.Client do
 
   def start_link(args, opts \\ [])
   # testing
-  def start_link(%{strategy: _} = args, opts),     do: Connection.start_link(ExModbus.Client, args, opts)
+  def start_link(%{strategy: _} = args, opts), do: Connection.start_link(ExModbus.Client, args, opts)
   # TCP
   def start_link(%{ip: _ip}     = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
   def start_link(%{host: _host} = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
