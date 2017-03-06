@@ -2,6 +2,11 @@ defmodule ExModbusTest do
   use ExUnit.Case
   alias ExModbus.Profiles.FroniusInt
 
+
+
+
+
+
   describe "reading data, function 03" do
     setup do
       {:ok, pid} = case System.get_env("SLAVE_HOST") do

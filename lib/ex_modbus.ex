@@ -18,8 +18,13 @@ defmodule ExModbus do
     end
   end
 
+  # defmacro field(name, type, addr, num_bytes, perms, units, desc, notes, sf, enum \\ %{}) do
+  #   quote bind_quoted: [name: name, type: type, addr: addr, num_bytes: num_bytes, perms: perms, desc: desc, data_map: data_map] do
+  #     @fields {name, type, addr, num_bytes, perms, desc, data_map}
+  #   end
+  # end
+
   def compile(fields) do
-    IO.puts "Modbus Compile"
     # TBD: Return AST for all fields at once
     ast = for {name, type, addr, num_bytes, perms, desc, data_map} <- fields do
       getter_ast = defgetter(name, type, addr, num_bytes, desc, data_map)
@@ -48,6 +53,7 @@ defmodule ExModbus do
 
       * Field Type: #{unquote(type)}
       """
+      # @spec unquote(name)(pid, integer) :: unquote(map_type(type))
       def unquote(name)(pid, slave_id \\ 1) do
         with {:ok, %{data: {:read_holding_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
              {:ok, value} = ExModbus.Types.convert_type(data, unquote(type)),
