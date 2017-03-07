@@ -18,5 +18,4 @@ defmodule MockClient do
         data: data
     } }
   end
-
 end
