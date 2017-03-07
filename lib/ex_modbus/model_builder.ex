@@ -54,7 +54,7 @@ defmodule ExModbus.ModelBuilder do
   def to_bytes(data, :uint16), do: <<data::unsigned-integer-size(16)>>
   def to_bytes(data, :enum16, map), do: <<Map.get(map, data, data)::unsigned-integer-size(16)>>
 
-  def map_enum_value(nil, value), do: {:ok, value}
+  def map_enum_value(%{} = empty_map, value) when empty_map == %{}, do: {:ok, value}
   def map_enum_value(enum_map, value) do
     case Map.get(enum_map, value) do
       nil -> {:enum_not_found_error, "#{inspect enum_map} either has no member #{value}, or it is out of range"}
