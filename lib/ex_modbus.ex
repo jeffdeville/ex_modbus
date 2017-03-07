@@ -5,7 +5,7 @@ defmodule ExModbus do
     quote do
       Module.register_attribute __MODULE__, :fields, accumulate: true, persist: false
       require Logger
-      import unquote(__MODULE__), only: [field: 7, field: 8]
+      import unquote(__MODULE__), only: [field: 6, field: 7]
       @before_compile unquote(__MODULE__)
     end
   end
@@ -14,11 +14,13 @@ defmodule ExModbus do
     compile(Module.get_attribute(env.module, :fields))
   end
 
-  defmacro field(name, type, addr, num_bytes, perms, desc, units, enum_map \\ Macro.escape(nil)) do
+  defmacro field(name, type, addr, num_bytes, perms, desc, opts \\ []) do
+    units = Keyword.get(opts, :units, "")
+    enum_map = Keyword.get(opts, :enum_map, Macro.escape(%{}))
     quote bind_quoted: [name: name, type: type, addr: addr,
                         num_bytes: num_bytes, perms: perms, desc: desc,
                         units: units, enum_map: enum_map] do
-      @fields {name, type, addr, num_bytes, perms, desc, units, enum_map}
+      @fields {name, type, addr, num_bytes, perms, desc, "", enum_map}
     end
   end
 
