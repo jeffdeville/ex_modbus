@@ -5,7 +5,8 @@ defmodule ExModbus.TestDevice do
   field :a_sf,           :sunssf,   40076,  2, :r,  "AC current scale factor"
   field :var,            :int16,    40090,  1, :r,  "(VAr) Reactive power"
   field :unk_type,       :unknown,  40098,  1, :r,  "Unknown type"
-  field :enum_test,      :enum16,   40099,  1, :r,  "Enum Test" #, %{"1" => "OFF", "2" => "On"}
+  field :enum_test,      :enum16,   40099,  1, :r,  "Enum Test", %{1 => "OFF", 2 => "On"}
+  field :enum_test_fail, :enum16,   40100,  1, :r,  "Enum Test", %{1 => "OFF", 2 => "On"}
   field :conn_win_tms,   :uint16,   40230,  1, :rw, "Time window for connect/disconnect (0-300 seconds)"
 end
 
@@ -15,7 +16,7 @@ defmodule ExModbus.FakeClient do
   def start_link(args, opts) do
     GenServer.start_link(__MODULE__, args, opts)
   end
-  def handle_call({read_holding_registers, %{unit_id: unit_id, start_address: address, data: count}}, from, _) do
+  def handle_call({:read_holding_registers, %{unit_id: unit_id, start_address: address, data: count}}, from, _) do
     response = {:ok,
       %{
         data: {:read_holding_registers, do_handle_call(address, count)},
@@ -26,13 +27,14 @@ defmodule ExModbus.FakeClient do
     {:reply, response, from}
   end
 
-  # These need to be binary results
   def do_handle_call(40004, 16), do: 'Fronius' ++ [0, 0, 0, 0, 0, 0, 0, 0, 0] |> :binary.list_to_bin
   def do_handle_call(40068, 1), do: <<38::unsigned-integer-size(16)>>
   def do_handle_call(40075, 2), do: <<-1::signed-integer-size(32)>>
   def do_handle_call(40089, 1), do: <<-23::signed-integer-size(16)>>
   # Note: The type return here does not matter.
   def do_handle_call(40097, 1), do: <<-1::signed-integer-size(16)>>
+  def do_handle_call(40098, 1), do: <<1::unsigned-integer-size(16)>>
+  def do_handle_call(40099, 1), do: <<99::unsigned-integer-size(16)>>
   def do_handle_call(40229, 1), do: <<1::unsigned-integer-size(16)>>
   def do_handle_call(40229, <<0, 13>>), do: <<13::unsigned-integer-size(16)>>
 
@@ -73,19 +75,19 @@ defmodule ExModbusTest do
       assert {:ok, %{data: -1}} = TestDevice.a_sf pid, 1
 
       # Enum
-      # assert {:ok, %{data: "OFF"}} = TestDevice.enum_test pid, 1
+      assert {:ok, %{data: "OFF"}} = TestDevice.enum_test pid, 1
     end
 
     test "type_conversion_error", %{pid: pid} do
       assert {:type_conversion_error, {<<255, 255>>, :unknown}} = TestDevice.unk_type pid, 1
     end
 
-    test "enum_not_found_error" do
-      # missing
+    test "enum_not_found_error", %{pid: pid} do
+      assert {:enum_not_found_error, "%{1 => \"OFF\", 2 => \"On\"} either has no member 99, or it is out of range"} = TestDevice.enum_test_fail pid, 1
     end
 
     test "writing data", %{pid: pid} do
-      assert :ok = TestDevice.set_conn_win_tms(pid, 1, 13)
+      assert {:ok, %{data: <<0, 13>>}} = TestDevice.set_conn_win_tms(pid, 1, 13)
     end
   end
 

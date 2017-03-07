@@ -12,7 +12,7 @@ defmodule ExModbus do
     compile(Module.get_attribute(env.module, :fields))
   end
 
-  defmacro field(name, type, addr, num_bytes, perms, desc, enum_map \\ []) do
+  defmacro field(name, type, addr, num_bytes, perms, desc, enum_map \\ Macro.escape(nil)) do
     quote bind_quoted: [name: name, type: type, addr: addr,
                         num_bytes: num_bytes, perms: perms, desc: desc, enum_map: enum_map] do
       @fields {name, type, addr, num_bytes, perms, desc, enum_map}
@@ -54,7 +54,7 @@ defmodule ExModbus do
                   transaction_id: transaction_id,
                   unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
              {:ok, value} <- ExModbus.Types.convert_type(data, unquote(type)),
-             {:ok, value} <- map_enum_value(unquote(enum_map), value)
+             {:ok, value} <- map_enum_value(unquote(Macro.escape(enum_map)), value)
         do
           {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
         else
@@ -84,9 +84,11 @@ defmodule ExModbus do
     end
   end
 
-  def map_enum_value([], value), do: {:ok, value}
   def map_enum_value(nil, value), do: {:ok, value}
   def map_enum_value(enum_map, value) do
-    Map.get(enum_map, value, {:enum_not_found_error, "#{inspect enum_map} either has no member #{value}, or it is out of range"})
+    case Map.get(enum_map, value) do
+      nil -> {:enum_not_found_error, "#{inspect enum_map} either has no member #{value}, or it is out of range"}
+      enum_val -> {:ok, enum_val}
+    end
   end
 end
