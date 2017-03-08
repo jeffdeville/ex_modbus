@@ -31,6 +31,8 @@ defmodule ExModbus.TcpClient do
     {:connect, :reconnect, {nil, ExModbus.TcpClient}}
   end
 
+  # This code doesn't belong in the genserver, because it could crash, which
+  # crashes the entire tcp connection.  I'd rather have this client
   def command(msg, socket, unit_id) do
     with wrapped_packet = wrap_packet(msg, unit_id),
          {:ok, resp_packet} <- send_receive(wrapped_packet, socket),
