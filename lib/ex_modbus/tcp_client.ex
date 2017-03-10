@@ -14,6 +14,7 @@ defmodule ExModbus.TcpClient do
 
   def connect(%{ip: {_, _, _, _} = ip, port: port}), do: do_connect(%{host_or_ip: ip, port: port})
   def connect(%{host: host, port: port}), do: do_connect(%{host_or_ip: String.to_charlist(host), port: port})
+  def connect(%{host_or_ip: _host_or_ip, port: _port}=args), do: do_connect(args)
   def do_connect(%{host_or_ip: host_or_ip, port: port}) do
     case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
