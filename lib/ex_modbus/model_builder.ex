@@ -9,15 +9,15 @@ defmodule ExModbus.ModelBuilder do
                                            {:type_conversion_error, {any(), any()}} |
                                            {:enum_not_found_error, String.t}
       def unquote(name)(pid, slave_id \\ 1) do
-        with {:ok,
-                %{data: {:read_holding_registers, data},
-                  transaction_id: transaction_id,
-                  unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
+        with {:ok, %{data: {:read_holding_registers, data},
+                     transaction_id: transaction_id,
+                     unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
              {:ok, value} <- Types.map_type(data, unquote(type)),
              {:ok, value} <- ModelBuilder.map_enum_value(unquote(Macro.escape(enum_map)), value)
         do
           {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
         else
+          {:ok, %{data: {:read_holding_registers_exception, _}} = data} -> {:read_holding_registers_exception, data}
           {:type_conversion_error, {data, type}} -> {:type_conversion_error, {data, type}}
           {:enum_not_found_error, message} -> {:enum_not_found_error, message}
         end
@@ -34,7 +34,7 @@ defmodule ExModbus.ModelBuilder do
         case ExModbus.Client.write_multiple_registers(pid, slave_id, unquote(addr - 1), ModelBuilder.to_bytes(data, unquote(type))) do
           {:ok, %{data: {:write_multiple_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
             {:ok, %{data: data, transaction_id: transaction_id, slave_id: unit_id}}
-          :ok -> :ok
+          {:ok, %{data: {:write_multiple_registers_exception, _}} = data} -> {:write_multiple_registers_exception, data}
         end
       end
     end
