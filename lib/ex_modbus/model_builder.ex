@@ -4,7 +4,7 @@ defmodule ExModbus.ModelBuilder do
 
   def defgetter(name, type, addr, num_bytes, desc, units, enum_map) do
     quote do
-      unquote(docs(desc, type, units))
+      unquote(docs(desc, type, units, addr, num_bytes))
       @spec unquote(name)(pid, integer) :: {:ok, %{data: any(), transaction_id: integer(), unit_id: integer()}} |
                                            {:type_conversion_error, {any(), any()}} |
                                            {:enum_not_found_error, String.t}
@@ -25,9 +25,9 @@ defmodule ExModbus.ModelBuilder do
     end
   end
 
-  def defsetter(name, type, addr, desc, units) do
+  def defsetter(name, type, addr, num_bytes, desc, units) do
     quote do
-      unquote(docs(desc, type, units))
+      unquote(docs(desc, type, units, addr, num_bytes))
       @spec unquote(name)(pid, integer, any) :: :ok
       def unquote(name)(pid, slave_id, data) do
         # More work required, not sure what will be returned here.
@@ -40,12 +40,14 @@ defmodule ExModbus.ModelBuilder do
     end
   end
 
-  def docs(desc, type, units) do
+  def docs(desc, type, units, addr, num_bytes) do
     quote do
       @doc """
       #{unquote(desc)}
       * Field Type: #{unquote(type)}
       * Units: #{unquote(units)}
+      * Addr: #{unquote(addr)}
+      * Num Bytes: #{unquote(num_bytes)}
       """
     end
   end
