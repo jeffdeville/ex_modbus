@@ -25,16 +25,20 @@ defmodule ExModbus.ModelBuilder do
     end
   end
 
-  def defsetter(name, type, addr, num_bytes, desc, units) do
+  def defsetter(name, type, addr, num_bytes, desc, units, enum_map) do
     quote do
       unquote(docs(desc, type, units, addr, num_bytes))
       @spec unquote(name)(pid, integer, any) :: :ok
       def unquote(name)(pid, slave_id, data) do
         # More work required, not sure what will be returned here.
-        case ExModbus.Client.write_multiple_registers(pid, slave_id, unquote(addr - 1), ModelBuilder.to_bytes(data, unquote(type))) do
-          {:ok, %{data: {:write_multiple_registers, data}, transaction_id: transaction_id, unit_id: unit_id}} ->
-            {:ok, %{data: data, transaction_id: transaction_id, slave_id: unit_id}}
-          {:ok, %{data: {:write_multiple_registers_exception, _}} = data} -> {:write_multiple_registers_exception, data}
+        with {:ok, mapped_value} <- ModelBuilder.to_bytes(data, unquote(type), unquote(Macro.escape(enum_map))),
+             {:ok, %{data: {:write_multiple_registers, data}, transaction_id: transaction_id, unit_id: unit_id}}
+                <- ExModbus.Client.write_multiple_registers(pid, slave_id, unquote(addr - 1), mapped_value)
+        do
+             {:ok, %{data: data, transaction_id: transaction_id, slave_id: unit_id}}
+        else
+             {:ok, %{data: {:write_multiple_registers_exception, _}} = data} -> {:write_multiple_registers_exception, data}
+             {error, message} -> {error, message}
         end
       end
     end
@@ -52,9 +56,25 @@ defmodule ExModbus.ModelBuilder do
     end
   end
 
-  def to_bytes(data, :int16), do: <<data::signed-integer-size(16)>>
-  def to_bytes(data, :uint16), do: <<data::unsigned-integer-size(16)>>
-  def to_bytes(data, :enum16, map), do: <<Map.get(map, data, data)::unsigned-integer-size(16)>>
+
+  def to_bytes(data, :int16, _), do: {:ok, <<data::signed-integer-size(16)>>}
+  def to_bytes(data, :uint16, _) when data >= 0, do: {:ok, <<data::unsigned-integer-size(16)>>}
+  def to_bytes(data, :uint16, _) when data < 0, do: {:invalid_data_type, "Data type is unsigned. No negative numbers"}
+  def to_bytes(data, :enum16, enum_map) when is_integer(data) do
+    case Map.has_key?(enum_map, data) do
+      true -> {:ok, <<data::unsigned-integer-size(16)>>}
+      false -> {:invalid_enum_value, "#{data} is not a valid value in the enum: #{inspect enum_map}"}
+    end
+  end
+  def to_bytes(data, :enum16, enum_map) when is_binary(data) do
+    flipped_map = enum_map |> flip_keys
+    case Map.has_key?(flipped_map, data) do
+      true -> {:ok, <<Map.fetch!(flipped_map, data)::unsigned-integer-size(16)>>}
+      false -> {:invalid_enum_value, "#{data} is not a valid value in the enum: #{inspect flipped_map}"}
+    end
+  end
+
+  defp flip_keys(map), do: Enum.reduce(map, %{}, fn {k, v}, acc -> Map.put(acc, v, k) end)
 
   def map_enum_value(%{} = empty_map, value) when empty_map == %{}, do: {:ok, value}
   def map_enum_value(enum_map, value) do

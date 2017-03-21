@@ -29,7 +29,7 @@ defmodule ExModbus do
       getter_ast = ModelBuilder.defgetter(name, type, addr, num_bytes, desc, units, enum_map)
       case perms do
         :r -> getter_ast
-        :rw -> [ModelBuilder.defsetter(String.to_atom("set_" <> Atom.to_string(name)), type, addr, num_bytes, desc, units) | [getter_ast] ]
+        :rw -> [ModelBuilder.defsetter(String.to_atom("set_" <> Atom.to_string(name)), type, addr, num_bytes, desc, units, enum_map) | [getter_ast] ]
       end
     end
 

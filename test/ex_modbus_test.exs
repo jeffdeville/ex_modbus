@@ -8,6 +8,7 @@ defmodule ExModbus.TestDevice do
   field :enum_test,      :enum16,   40099,  1, :r,  "Enum Test", enum_map: %{1 => "OFF", 2 => "On"}
   field :enum_test_fail, :enum16,   40100,  1, :r,  "Enum Test", enum_map: %{1 => "OFF", 2 => "On"}
   field :conn_win_tms,   :uint16,   40230,  1, :rw, "Time window for connect/disconnect (0-300 seconds)", units: "S"
+  field :outpfset_ena,   :enum16,   40240,  1, :rw, "set a power factor", enum_map: %{0 => "DISABLED", 1 => "ENABLED"}
 end
 
 defmodule ExModbus.FakeClient do
@@ -37,6 +38,8 @@ defmodule ExModbus.FakeClient do
   def do_handle_call(40099, 1), do: <<99::unsigned-integer-size(16)>>
   def do_handle_call(40229, 1), do: <<1::unsigned-integer-size(16)>>
   def do_handle_call(40229, <<0, 13>>), do: <<13::unsigned-integer-size(16)>>
+  def do_handle_call(40239, <<0, 1>>), do: <<1::unsigned-integer-size(16)>>
+  def do_handle_call(40239, <<0, 0>>), do: <<0::unsigned-integer-size(16)>>
 end
 
 defmodule ExModbusTest do
@@ -76,6 +79,11 @@ defmodule ExModbusTest do
 
     test "writing data", %{pid: pid} do
       assert {:ok, %{data: <<0, 13>>}} = TestDevice.set_conn_win_tms(pid, 1, 13)
+    end
+
+    test "writing to an enum type using either the enumeration or the integer value", %{pid: pid} do
+      assert {:ok, %{data: <<0, 1>>}} = TestDevice.set_outpfset_ena(pid, 1, "ENABLED")
+      assert {:ok, %{data: <<0, 0>>}} = TestDevice.set_outpfset_ena(pid, 1, 0)
     end
   end
 end
