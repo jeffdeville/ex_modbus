@@ -12,14 +12,13 @@ defmodule ExModbus.TcpClient do
   defdelegate wrap_packet(packet, unit_id), to: Modbus.Tcp
   defdelegate unwrap_packet(packet), to: Modbus.Tcp
 
-  def init(%{ip: {_, _, _, _} = ip, port: port}), do: connect(%{host_or_ip: ip, port: port})
-  def init(%{host: host, port: port}), do: connect(%{host_or_ip: String.to_charlist(host), port: port})
-  def init(%{host_or_ip: _host_or_ip, port: _port}=args), do: connect(args)
-
-  def connect(%{host_or_ip: host_or_ip, port: port}) do
+  def init(%{ip: {_, _, _, _} = ip, port: port}), do: do_init(%{host_or_ip: ip, port: port})
+  def init(%{host: host, port: port}), do: do_init(%{host_or_ip: String.to_charlist(host), port: port})
+  def init(%{host_or_ip: _host_or_ip, port: _port}=args), do: do_init(args)
+  def do_init(%{host_or_ip: host_or_ip, port: port}) do
     case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, :econnrefused} -> {:connection_error, "Could not connect to device"}
+      {:error, :econnrefused} -> :ignore
     end
   end
 
