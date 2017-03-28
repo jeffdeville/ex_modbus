@@ -2,14 +2,14 @@ defmodule TcpClientTest do
   alias ExModbus.TcpClient
   use ExUnit.Case
 
-  describe "connect\1" do
+  describe "init\1" do
     test "when a port is provided, it overrides the default" do
       {:ok, _listen_socket} = :gen_tcp.listen(5003, [:binary, packet: :raw, active: false, reuseaddr: true])
-      assert {:ok, {_socket, ExModbus.TcpClient}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
+      assert {:ok, {_socket, ExModbus.TcpClient}} = TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
     end
 
     test "if no connection possible, backoff" do
-      assert {:backoff, 1000, %{host_or_ip: {127, 0, 0, 1}, port: 5003}} = TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
+      assert {:connection_error, "Could not connect to device"} = TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
     end
   end
 
@@ -17,7 +17,7 @@ defmodule TcpClientTest do
     setup do
       {:ok, pid} = MockTcpSlave.start_link(nil)
       MockTcpSlave.listen(pid)
-      {:ok, {socket, _}} =  TcpClient.connect(%{ip: {127, 0, 0, 1}, port: 5003})
+      {:ok, {socket, _}} =  TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
       {:ok, %{socket: socket}}
     end
 

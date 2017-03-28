@@ -24,8 +24,8 @@ defmodule ClientTest do
     # end
   end
 
-  test "connect\1 calls the provided strategy" do
-    assert Client.connect(nil, %{strategy: MockClient}) == {:ok, {nil, MockClient}}
+  test "init\1 calls the provided strategy" do
+    assert Client.init(%{strategy: MockClient}) == {:ok, {nil, MockClient}}
   end
 
   # TODO: read_data is the only call I've used so far, so it's the only

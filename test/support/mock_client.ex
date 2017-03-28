@@ -2,7 +2,7 @@ defmodule MockClient do
   require Logger
   @behaviour ExModbus.ClientBehaviour
 
-  def connect(_args) do
+  def init(_args) do
     {:ok, {nil, MockClient}}
   end
 

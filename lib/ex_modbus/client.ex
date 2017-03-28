@@ -1,25 +1,22 @@
 defmodule ExModbus.Client do
-  use Connection
+  use GenServer
   require Logger
 
   def start_link(args, opts \\ [])
   # testing
-  def start_link(%{strategy: _} = args, opts), do: Connection.start_link(ExModbus.Client, args, opts)
+  def start_link(%{strategy: _} = args, opts), do: GenServer.start_link(ExModbus.Client, args, opts)
   # TCP
   def start_link(%{ip: _ip}     = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
   def start_link(%{host: _host} = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
   # RTU
   def start_link(%{tty: _tty, speed: _speed} = args, opts) do
     args = Map.merge(args, %{strategy: ExModbus.RtuClient})
-    Connection.start_link(ExModbus.Client, args, opts)
+    GenServer.start_link(ExModbus.Client, args, opts)
   end
 
-  def init(%{strategy: _} = args) do
-    {:connect, :init, args}
-  end
-
-  def connect(_, %{strategy: strategy} = args) do
-    apply(strategy, :connect, [args])
+  def init(%{strategy: strategy} = args) do
+    apply(strategy, :init, [args])
+    # {:connect, :init, args}
   end
 
   def read_data(pid, unit_id, start_address, count) do

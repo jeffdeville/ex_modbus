@@ -12,24 +12,15 @@ defmodule ExModbus.TcpClient do
   defdelegate wrap_packet(packet, unit_id), to: Modbus.Tcp
   defdelegate unwrap_packet(packet), to: Modbus.Tcp
 
-  def connect(%{ip: {_, _, _, _} = ip, port: port}), do: do_connect(%{host_or_ip: ip, port: port})
-  def connect(%{host: host, port: port}), do: do_connect(%{host_or_ip: String.to_charlist(host), port: port})
-  def connect(%{host_or_ip: _host_or_ip, port: _port}=args), do: do_connect(args)
-  def do_connect(%{host_or_ip: host_or_ip, port: port}) do
+  def init(%{ip: {_, _, _, _} = ip, port: port}), do: connect(%{host_or_ip: ip, port: port})
+  def init(%{host: host, port: port}), do: connect(%{host_or_ip: String.to_charlist(host), port: port})
+  def init(%{host_or_ip: _host_or_ip, port: _port}=args), do: connect(args)
+
+  def connect(%{host_or_ip: host_or_ip, port: port}) do
     case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}]) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, _} -> {:backoff, 1000, %{host_or_ip: host_or_ip, port: port}}
+      {:error, :econnrefused} -> {:connection_error, "Could not connect to device"}
     end
-  end
-
-  def disconnect(info, {socket, _}) do
-    :ok = :gen_tcp.close(socket)
-    case info do
-      {:close, from} -> Connection.reply(from, :ok)
-      {:error, :closed} -> Logger.error("Connection closed")
-      {:error, reason} -> Logger.error("Connection Error: #{inspect reason}")
-    end
-    {:connect, :reconnect, {nil, ExModbus.TcpClient}}
   end
 
   # This code doesn't belong in the genserver, because it could crash, which
