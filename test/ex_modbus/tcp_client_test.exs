@@ -9,7 +9,8 @@ defmodule TcpClientTest do
     end
 
     test "if no connection possible, backoff" do
-      assert :ignore = TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
+      assert {:stop, :inverter_inaccessible} = TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
+      assert {:stop, :connectder_inaccessible} = TcpClient.init(%{ip: {172, 18, 0, 2}, port: 5002})
     end
   end
 

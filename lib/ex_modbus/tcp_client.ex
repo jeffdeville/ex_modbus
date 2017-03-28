@@ -16,9 +16,10 @@ defmodule ExModbus.TcpClient do
   def init(%{host: host, port: port}), do: do_init(%{host_or_ip: String.to_charlist(host), port: port})
   def init(%{host_or_ip: _host_or_ip, port: _port}=args), do: do_init(args)
   def do_init(%{host_or_ip: host_or_ip, port: port}) do
-    case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}]) do
+    case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}], 3000) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, :econnrefused} -> :ignore
+      {:error, :econnrefused} -> {:stop, :inverter_inaccessible}
+      {:error, :timeout} -> {:stop, :connectder_inaccessible}
     end
   end
 
