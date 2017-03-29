@@ -18,8 +18,7 @@ defmodule ExModbus.TcpClient do
   def do_init(%{host_or_ip: host_or_ip, port: port}) do
     case :gen_tcp.connect(host_or_ip, port, [:binary, {:active, false}], 3000) do
       {:ok, socket} -> {:ok, {socket, ExModbus.TcpClient}}
-      {:error, :econnrefused} -> {:stop, :inverter_inaccessible}
-      {:error, :timeout} -> {:stop, :connectder_inaccessible}
+      {:error, message} -> {:stop, message}
     end
   end
 
