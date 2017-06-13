@@ -1,4 +1,6 @@
 defmodule ExModbus.ModelBuilder do
+  use Bitwise
+
   alias __MODULE__
   alias ExModbus.Types
 
@@ -13,7 +15,7 @@ defmodule ExModbus.ModelBuilder do
                      transaction_id: transaction_id,
                      unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
              {:ok, value} <- Types.map_type(data, unquote(type)),
-             {:ok, value} <- ModelBuilder.map_enum_value(unquote(Macro.escape(enum_map)), value)
+             {:ok, value} <- ModelBuilder.map_enum_value(unquote(type), unquote(Macro.escape(enum_map)), value)
         do
           {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
         else
@@ -56,7 +58,6 @@ defmodule ExModbus.ModelBuilder do
     end
   end
 
-
   def to_bytes(data, :int16, _), do: {:ok, <<data::signed-integer-size(16)>>}
   def to_bytes(data, :uint16, _) when data >= 0, do: {:ok, <<data::unsigned-integer-size(16)>>}
   def to_bytes(data, :uint16, _) when data < 0, do: {:invalid_data_type, "Data type is unsigned. No negative numbers"}
@@ -76,11 +77,21 @@ defmodule ExModbus.ModelBuilder do
 
   defp flip_keys(map), do: Enum.reduce(map, %{}, fn {k, v}, acc -> Map.put(acc, v, k) end)
 
-  def map_enum_value(%{} = empty_map, value) when empty_map == %{}, do: {:ok, value}
-  def map_enum_value(enum_map, value) do
+  def map_enum_value(_, %{} = empty_map, value) when empty_map == %{}, do: {:ok, value}
+  def map_enum_value(:enum16, enum_map, value) do
     case Map.get(enum_map, value) do
       nil -> {:enum_not_found_error, "#{inspect enum_map} either has no member #{value}, or it is out of range"}
       enum_val -> {:ok, enum_val}
     end
+  end
+  def map_enum_value(bitfield, enum_map, value) when bitfield in [:bitfield16, :bitfield32] do
+    result = enum_map
+      |> Enum.map(fn {index, enum_title} ->
+        pow_of_2 = (round(:math.pow(2, index + 1)) - 1)
+        is_match = (value &&& pow_of_2) == pow_of_2
+        {enum_title, is_match}
+      end)
+      |> Enum.into(%{})
+    {:ok, result}
   end
 end

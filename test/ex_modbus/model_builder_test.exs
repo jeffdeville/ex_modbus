@@ -24,6 +24,27 @@ defmodule ExModbus.ModelBuilderTest do
       assert {:invalid_enum_value, _} = to_bytes("INVALID", :enum16, enum_map)
       assert {:invalid_enum_value, _} = to_bytes(2, :enum16, enum_map)
     end
+  end
 
+  describe "map_enum_value/2" do
+    test "when no enum map" do
+      assert map_enum_value(:uint32, %{}, "5") == {:ok, "5"}
+      assert map_enum_value(:enum16, %{}, "5") == {:ok, "5"}
+    end
+
+    test "when enum exists, but value does not match" do
+      enum_map = %{"missing" => "value"}
+      assert map_enum_value(:enum16, enum_map, "no_match") == {:enum_not_found_error, "#{inspect enum_map} either has no member no_match, or it is out of range"}
+    end
+
+    test "when enum exists, and value matches" do
+      enum_map = %{"value" => "enumeration match"}
+      assert map_enum_value(:enum16, enum_map, "value") == {:ok, "enumeration match"}
+    end
+
+    test "when bitfields, map all values" do
+      enum_map = %{0 => "CONNECTED", 1 => "AVAILABLE", 2 => "OPERATING", 3 => "TEST"}
+      assert map_enum_value(:bitfield16, enum_map, 7) == {:ok, %{"CONNECTED" => true, "AVAILABLE" => true, "OPERATING" => true, "TEST" => false}}
+    end
   end
 end
