@@ -1,120 +1,79 @@
 defmodule ExModbus.Client do
-  @moduledoc """
-  ModbusTCP client to manage communication with a device
-  """
-
   use GenServer
   require Logger
 
-  @read_timeout 4000
-
-  # Public Interface
-
   def start_link(args, opts \\ [])
-
-  def start_link(ip = {_a, _b, _c, _d}, opts) do
-    start_link(%{ip: ip}, opts)
+  # testing
+  def start_link(%{strategy: _} = args, opts), do: GenServer.start_link(ExModbus.Client, args, opts)
+  # TCP
+  def start_link(%{ip: _ip}     = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
+  def start_link(%{host: _host} = args, opts), do: start_link(Map.merge(args, %{strategy: ExModbus.TcpClient}), opts)
+  # RTU
+  def start_link(%{tty: _tty, speed: _speed} = args, opts) do
+    args = Map.merge(args, %{strategy: ExModbus.RtuClient})
+    GenServer.start_link(ExModbus.Client, args, opts)
   end
-  def start_link(args = %{ip: _ip}, opts) do
-    GenServer.start_link(__MODULE__, args, opts)
+
+  def init(%{strategy: strategy} = args) do
+    apply(strategy, :init, [args])
+    # {:connect, :init, args}
   end
 
   def read_data(pid, unit_id, start_address, count) do
-    GenServer.call(pid, {:read_holding_registers, %{unit_id: unit_id, start_address: start_address, count: count}})
+    GenServer.call(pid, {:read_holding_registers, %{unit_id: unit_id, start_address: start_address, data: count}})
   end
 
   def read_coils(pid, unit_id, start_address, count) do
-    GenServer.call(pid, {:read_coils, %{unit_id: unit_id, start_address: start_address, count: count}})
+    GenServer.call(pid, {:read_coils, %{unit_id: unit_id, start_address: start_address, data: count}})
   end
 
   @doc """
   Write a single coil at address. Possible states are `:on` and `:off`.
   """
   def write_single_coil(pid, unit_id, address, state) do
-    GenServer.call(pid, {:write_single_coil, %{unit_id: unit_id, start_address: address, state: state}})
+    GenServer.call(pid, {:write_single_coil, %{unit_id: unit_id, start_address: address, data: state}})
   end
-
 
   def write_single_register(pid, unit_id, address, data) do
-    GenServer.call(pid, {:write_single_register, %{unit_id: unit_id, start_address: address, state: data}})
+    GenServer.call(pid, {:write_single_register, %{unit_id: unit_id, start_address: address, data: data}})
   end
-
 
   def write_multiple_registers(pid, unit_id, address, data) do
-    GenServer.call(pid, {:write_multiple_registers, %{unit_id: unit_id, start_address: address, state: data}})
+    GenServer.call(pid, {:write_multiple_registers, %{unit_id: unit_id, start_address: address, data: data}})
   end
 
-
-  def generic_call(pid, unit_id, {call, address, count, transform}) do
-    %{data: {_type, data}} = GenServer.call(pid, {call, %{unit_id: unit_id, start_address: address, count: count}})
-    transform.(data)
+  def get_strategy(pid) do
+    GenServer.call(pid, :get_strategy)
   end
 
-
-  # GenServer Callbacks
-
-  def init(%{ip: ip}) do
-    {:ok, socket} = :gen_tcp.connect(ip, Modbus.Tcp.port, [:binary, {:active, false}])
-    {:ok, socket}
-  end
-
-  def handle_call({:read_coils, %{unit_id: unit_id, start_address: address, count: count}}, _from, socket) do
+  def handle_call({:read_coils, %{unit_id: unit_id, start_address: address, count: count}}, _from, {transport, strategy}) do
     # limits the number of coils returned to the number `count` from the request
     limit_to_count = fn msg ->
                         {:read_coils, lst} = msg.data
                         {_, elems} = Enum.split(lst, -count)
                         %{msg | data: {:read_coils, elems}}
     end
-    response = Modbus.Packet.read_coils(address, count)
-               |> Modbus.Tcp.wrap_packet(unit_id)
-               |> send_and_rcv_packet(socket)
-               |> limit_to_count.()
-
-    {:reply, response, socket}
+    response = message_slave(:read_coils, address, count, unit_id, transport, strategy)
+    |> limit_to_count.()
+    {:reply, response, {transport, strategy}}
   end
 
-  def handle_call({:read_holding_registers, %{unit_id: unit_id, start_address: address, count: count}}, _from, socket) do
-    response = Modbus.Packet.read_holding_registers(address, count)
-               |> Modbus.Tcp.wrap_packet(unit_id)
-               |> send_and_rcv_packet(socket)
-    {:reply, response, socket}
+  def handle_call({action, %{unit_id: unit_id, start_address: address, data: data}}, _from, {transport, strategy}) do
+    response = message_slave(action, address, data, unit_id, transport, strategy)
+    {:reply, response, {transport, strategy}}
   end
 
-  def handle_call({:write_single_coil, %{unit_id: unit_id, start_address: address, state: state}}, _from, socket) do
-    response = Modbus.Packet.write_single_coil(address, state)
-               |> Modbus.Tcp.wrap_packet(unit_id)
-               |> send_and_rcv_packet(socket)
-    {:reply, response, socket}
+  def handle_call(:get_strategy, _from, {_, strategy} = state) do
+    {:reply, {:ok, inspect(strategy)}, state}
   end
 
-  def handle_call({:write_single_register, %{unit_id: unit_id, start_address: address, state: data}}, _from, socket) do
-    response = Modbus.Packet.write_single_register(address,data)
-               |> Modbus.Tcp.wrap_packet(unit_id)
-               |> send_and_rcv_packet(socket)
-    {:reply, response, socket}
-  end
-
-  def handle_call({:write_multiple_registers, %{unit_id: unit_id, start_address: address, state: data}}, _from, socket) do
-    response = Modbus.Packet.write_multiple_registers(address, data)
-               |> Modbus.Tcp.wrap_packet(unit_id)
-               |> send_and_rcv_packet(socket)
-    {:reply, response, socket}
-  end
-
-  def handle_call(msg, _from, state) do
+  def handle_info(msg, _from, state) do
     Logger.info "Unknown handle_cast msg: #{inspect msg}"
-    {:reply, "unknown call message", state}
+    {:noreply, state}
   end
 
-  defp send_and_rcv_packet(msg, socket) do
-    #Logger.debug "Packet: #{inspect msg}"
-    :ok = :gen_tcp.send(socket, msg)
-    {:ok, packet} = :gen_tcp.recv(socket, 0, @read_timeout)
-    # XXX - handle {:error, closed} and try to reconnect
-    #Logger.debug "Response: #{inspect packet}"
-    unwrapped = Modbus.Tcp.unwrap_packet(packet)
-    {:ok, data} = Modbus.Packet.parse_response_packet(unwrapped.packet)
-    %{unit_id: unwrapped.unit_id, transaction_id: unwrapped.transaction_id, data: data}
+  defp message_slave(action, address, data, unit_id, transport, strategy) do
+    apply(Modbus.Packet, action, [address, data])
+    |> strategy.command(transport, unit_id)
   end
-
 end

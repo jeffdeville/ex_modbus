@@ -14,7 +14,7 @@ defmodule PacketTest do
   end
 
   test "parse holding registers" do
-    assert Modbus.Packet.parse_response_packet(<<0x03, 0x04, 0x01, 0x02, 0x03, 0x04>>) == {:ok, {:read_holding_registers, [258, 772]}}
+    assert Modbus.Packet.parse_response_packet(<<0x03, 0x04, 0x01, 0x02, 0x03, 0x04>>) == {:ok, {:read_holding_registers, <<1, 2, 3, 4>>}}
   end
 
   test "read input registers" do
@@ -36,11 +36,11 @@ defmodule PacketTest do
   end
 
   test "read holding registers response" do
-    assert {:ok, {:read_holding_registers, [1]}} == Modbus.Packet.parse_response_packet(<<3, 2, 0, 1>>)
+    assert {:ok, {:read_holding_registers, <<0, 1>>}} == Modbus.Packet.parse_response_packet(<<3, 2, 0, 1>>)
   end
 
   test "read multiple holding registers response" do
-    assert {:ok, {:read_holding_registers, [2, 13313]}} ==
+    assert {:ok, {:read_holding_registers, <<0, 2, 52, 1>>}} ==
       Modbus.Packet.parse_response_packet(<<3, 2, 0, 2, 52, 1>>)
   end
 end

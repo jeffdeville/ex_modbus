@@ -1,0 +1,31 @@
+machine:
+  environment:
+    PATH: '$HOME/.asdf/bin:$HOME/.asdf/shims:$PATH'
+
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
+  services:
+    - docker
+
+dependencies:
+  cache_directories:
+    - ~/.asdf
+    - deps
+    - _build
+  pre:
+    - if ! asdf | grep version; then git clone https://github.com/HashNuke/asdf.git ~/.asdf; fi
+    - asdf plugin-list | grep -q erlang || asdf plugin-add erlang https://github.com/HashNuke/asdf-erlang.git
+    - asdf plugin-list | grep -q elixir || asdf plugin-add elixir https://github.com/HashNuke/asdf-elixir.git
+    - asdf install
+    - mix local.hex --force
+    - mix local.rebar --force
+    - mix deps.get
+    - mix deps.compile
+    - docker info
+
+test:
+  pre:
+    - docker run -d --name modbus-slave  -p 5002:502 jeffdeville/modbus_slave_simulator
+    - MIX_ENV=test mix do compile --warnings-as-errors, test
+  post:
+    - docker kill modbus-slave

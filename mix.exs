@@ -1,13 +1,15 @@
 defmodule ExModbus.Mixfile do
   use Mix.Project
+  @version "0.0.4"
 
   def project do
     [app: :ex_modbus,
-     version: "0.0.3",
-     elixir: ">= 1.0.0",
+     version: @version,
+     elixir: ">= 1.3.0",
      description: "An Elixir ModbusTCP client implementation.",
-     package: package,
-     deps: deps]
+     package: package(),
+     elixirc_paths: elixirc_paths(Mix.env),
+     deps: deps()]
   end
 
   def package do
@@ -16,6 +18,10 @@ defmodule ExModbus.Mixfile do
      links: %{"GitHub" => "https://github.com/hirschenberger/ex_modbus"}
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
 
   # Configuration for the OTP application
   #
@@ -36,6 +42,8 @@ defmodule ExModbus.Mixfile do
   defp deps do
     [{:nerves_uart, git: "https://github.com/dhanson358/nerves_uart" },
      {:earmark, "~> 0.1.19", only: :dev},
-     {:ex_doc, "~> 0.10", only: :dev}]
+     {:ex_doc, "~> 0.10", only: :dev},
+     {:mix_test_watch, "~> 0.3", only: :dev, runtime: false}
+   ]
   end
 end

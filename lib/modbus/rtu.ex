@@ -5,8 +5,6 @@ defmodule Modbus.Rtu do
 
   alias Modbus.Crc16
 
-  @slave_id 0x0001
-
   # reading functions
   @function_read_coil_status 0x01
   @function_read_input_status 0x02
