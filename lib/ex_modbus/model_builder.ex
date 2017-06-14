@@ -13,8 +13,14 @@ defmodule ExModbus.ModelBuilder do
       def unquote(name)(pid, slave_id \\ 1) do
         with {:ok, %{data: {:read_holding_registers, data},
                      transaction_id: transaction_id,
-                     unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
-             {:ok, value} <- Types.map_type(data, unquote(type)),
+                     unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes))
+        do
+             apply(__MODULE__, unquote(name), [data, transaction_id, unit_id])
+        end
+      end
+
+      def unquote(name)(data, transaction_id, unit_id) do
+        with {:ok, value} <- Types.map_type(data, unquote(type)),
              {:ok, value} <- ModelBuilder.map_enum_value(unquote(type), unquote(Macro.escape(enum_map)), value)
         do
           {:ok, %{data: value, transaction_id: transaction_id, slave_id: unit_id}}
