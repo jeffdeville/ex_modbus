@@ -4,6 +4,6 @@
   "elixir_serial": {:git, "https://github.com/bitgamma/elixir_serial", "0ea4220a2a44451f33b20cb2a71adb4265b29d61", [tag: "v0.1.2"]},
   "ex_doc": {:hex, :ex_doc, "0.11.5", "0dc51cb84f8312162a2313d6c71573a9afa332333d8a332bb12540861b9834db", [:mix], [{:earmark, "~> 0.1.17 or ~> 0.2", [hex: :earmark, optional: true]}]},
   "fs": {:hex, :fs, "2.12.0", "ad631efacc9a5683c8eaa1b274e24fa64a1b8eb30747e9595b93bec7e492e25e", [:rebar3], []},
-  "mix_test_watch": {:hex, :mix_test_watch, "0.3.0", "25c335ebb241ad06fed34453e340a64f9cc1dfcd7011bd98ef097fdf3d6a92d7", [:mix], [{:fs, "~> 2.12", [hex: :fs, optional: false]}]},
+  "mix_test_watch": {:hex, :mix_test_watch, "0.4.0", "7e44b681b0238999d4c39b5beed77b4ac45aef1c112a763aae414bdb5bc34523", [:mix], [{:fs, "~> 2.12", [hex: :fs, optional: false]}]},
   "nerves_uart": {:git, "https://github.com/dhanson358/nerves_uart", "217383bcb03faa9089dadd88f4252f8dbd771b2d", []},
   "serial": {:git, "https://github.com/bitgamma/elixir_serial", "0ea4220a2a44451f33b20cb2a71adb4265b29d61", [tag: "v0.1.2"]}}
