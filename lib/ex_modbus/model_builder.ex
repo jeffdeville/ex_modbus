@@ -4,6 +4,61 @@ defmodule ExModbus.ModelBuilder do
   alias __MODULE__
   alias ExModbus.Types
 
+  def defgroupgetter(name, include_fields, all_fields) do
+    # find the fields that are included. Assert that they're all found
+    fields = include_fields
+      |> Enum.map(&(find_by_name!(all_fields, &1)))
+      |> Enum.sort(fn {_, _, addr1, _, _, _, _, _}, {_, _, addr2, _, _, _, _, _} -> addr1 < addr2 end)
+
+    # Assert that they're all in order of ascending address
+    assert_ascending_contiguous_order(fields)
+
+    # query for the entire data block
+    [{_, _, addr, _, _, _, _, _} | _rest] = fields
+    num_bytes = Enum.reduce(fields, 0, fn {_, _, _, bytes, _, _, _, _}, acc -> acc + bytes end)
+
+    quote do
+      @spec unquote(name)(pid, integer) :: {:ok, %{data: map(), transaction_id: integer(), unit_id: integer()}} |
+                                           {:type_conversion_error, {any(), any()}} |
+                                           {:enum_not_found_error, String.t}
+      def unquote(name)(pid, slave_id \\ 1) do
+        with {:ok, %{data: {:read_holding_registers, data},
+                     transaction_id: transaction_id,
+                     unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, unquote(addr - 1), unquote(num_bytes)),
+             results = map_results(data, unquote(Macro.escape(fields)), transaction_id, unit_id),
+             mapped_results = Enum.map(results, fn {:ok, {name, value}} -> {name, value} end)
+               |> Enum.into(%{})
+        do
+             {:ok, mapped_results}
+        end
+      end
+    end
+  end
+
+  defp find_by_name!(fields, name) do
+    field = Enum.find(fields, fn
+        {^name, _, _, _, _, _, _, _} -> true
+        _ -> false
+      end)
+    case field do
+      nil -> raise ArgumentError, "Not all group fields available in single fields list"
+      field -> field
+    end
+  end
+
+  def assert_ascending_contiguous_order(fields) do
+    fields
+    |> Enum.chunk(2, 1)
+    |> Enum.each(&assert_contiguous!/1)
+  end
+
+  defp assert_contiguous!([{_, _, addr1, bytes1, _, _, _, _}, {_, _, addr2, _, _, _, _, _}]) do
+    case addr1 + bytes1 == addr2 do
+      true -> true
+      false -> raise ArgumentError, "Fields must be contiguous. #{addr1} #{bytes1} #{addr2}"
+    end
+  end
+
   def defgetter(name, type, addr, num_bytes, desc, units, enum_map) do
     quote do
       unquote(docs(desc, type, units, addr, num_bytes))

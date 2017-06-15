@@ -1,6 +1,6 @@
 defmodule ExModbus.TestDevice do
   use ExModbus
-  field :manufacturer,   :string32, 40005, 16, :r,  "(Mn Units: SF:) Manufacturer Range: Fronius"
+  field :manufacturer,   :string,   40005, 16, :r,  "(Mn Units: SF:) Manufacturer Range: Fronius"
   field :device_address, :uint16,   40069,  1, :r,  "(DA Units: SF:) Modbus Device Address Range: 1-247"
   field :a_sf,           :sunssf,   40076,  2, :r,  "AC current scale factor", units: "SF"
   field :var,            :int16,    40090,  1, :r,  "(VAr) Reactive power", units: "Var"
@@ -9,6 +9,18 @@ defmodule ExModbus.TestDevice do
   field :enum_test_fail, :enum16,   40100,  1, :r,  "Enum Test", enum_map: %{1 => "OFF", 2 => "On"}
   field :conn_win_tms,   :uint16,   40230,  1, :rw, "Time window for connect/disconnect (0-300 seconds)", units: "S"
   field :outpfset_ena,   :enum16,   40240,  1, :rw, "set a power factor", enum_map: %{0 => "DISABLED", 1 => "ENABLED"}
+end
+
+defmodule Exmodbus.SunspecDevice do
+  use ExModbus
+  field :manufacturer,    :string, 40005, 16, :r,  "Well known value registered with SunSpec for compliance"
+  field :model,           :string, 40021, 16, :r,  "Manufacturer specific value (32 chars)"
+  field :options,         :string, 40037,  8, :r,  "Manufacturer specific value (16 chars)"
+  field :version,         :string, 40045,  8, :r,  "Manufacturer specific value (16 chars)"
+  field :serial_number,   :string, 40053, 16, :r,  "Manufacturer specific value (32 chars)"
+  field :device_address,  :uint16, 40069,  1, :rw, "Modbus device address"
+
+  field_group :all_fields, [:manufacturer, :model, :options, :version, :serial_number, :device_address]
 end
 
 defmodule ExModbus.FakeClient do
@@ -40,6 +52,16 @@ defmodule ExModbus.FakeClient do
   def do_handle_call(40229, <<0, 13>>), do: <<13::unsigned-integer-size(16)>>
   def do_handle_call(40239, <<0, 1>>), do: <<1::unsigned-integer-size(16)>>
   def do_handle_call(40239, <<0, 0>>), do: <<0::unsigned-integer-size(16)>>
+  def do_handle_call(40004, 65) do
+    # wtf goes here?
+    manufacturer = <<70, 114, 111, 110, 105, 117, 115, 0, 0, 0, 0, 0, 0, 0, 0, 0>> # Fronius
+    model = <<83, 117, 110, 83, 112, 101, 99, 0, 0, 0, 0, 0, 0, 0, 0, 0>> # Sunspec
+    options = <<79, 112, 116, 105, 111, 110, 115, 0>> # Options
+    version = <<86, 101, 114, 115, 105, 111, 110, 0>> # Version
+    serial_number = <<83, 101, 114, 105, 97, 108, 32, 78, 117, 109, 98, 101, 114, 0, 0, 0>> # Serial Number
+    device_address = <<0, 5>>
+    manufacturer <> model <> options <> version <> serial_number <> device_address
+  end
 end
 
 defmodule ExModbusTest do
@@ -84,6 +106,23 @@ defmodule ExModbusTest do
     test "writing to an enum type using either the enumeration or the integer value", %{pid: pid} do
       assert {:ok, %{data: <<0, 1>>}} = TestDevice.set_outpfset_ena(pid, 1, "ENABLED")
       assert {:ok, %{data: <<0, 0>>}} = TestDevice.set_outpfset_ena(pid, 1, 0)
+    end
+
+    test "reads field groupings", %{pid: pid} do
+      assert {:ok, %{
+        manufacturer: manufacturer,
+        model: model,
+        options: options,
+        version: version,
+        serial_number: serial_number,
+        device_address: device_address
+      }} = Exmodbus.SunspecDevice.all_fields(pid, 1)
+      assert manufacturer == "Fronius"
+      assert model == "SunSpec"
+      assert options == "Options"
+      assert version == "Version"
+      assert serial_number == "Serial Number"
+      assert device_address == 5
     end
   end
 end
