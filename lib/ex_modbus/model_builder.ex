@@ -1,10 +1,12 @@
 defmodule ExModbus.ModelBuilder do
   use Bitwise
 
+  require Logger
+
   alias __MODULE__
   alias ExModbus.Types
 
-  def defgroupgetter(name, include_fields, all_fields) do
+  def defgroupgetter(name, include_fields, all_fields, desc \\ "") do
     # find the fields that are included. Assert that they're all found
     fields = include_fields
       |> Enum.map(&(find_by_name!(all_fields, &1)))
@@ -18,6 +20,11 @@ defmodule ExModbus.ModelBuilder do
     num_bytes = Enum.reduce(fields, 0, fn {_, _, _, bytes, _, _, _, _}, acc -> acc + bytes end)
 
     quote do
+      @doc """
+      #{unquote(desc)}
+      * Addr: #{unquote(addr)}
+      * Num Bytes: #{unquote(num_bytes)}
+      """
       @spec unquote(name)(pid, integer) :: {:ok, %{data: map(), transaction_id: integer(), unit_id: integer()}} |
                                            {:type_conversion_error, {any(), any()}} |
                                            {:enum_not_found_error, String.t}
@@ -36,15 +43,15 @@ defmodule ExModbus.ModelBuilder do
   end
 
   defp find_by_name!(fields, name) do
-    field = Enum.find(fields, fn
-        {^name, _, _, _, _, _, _, _} -> true
-        _ -> false
-      end)
-    case field do
-      nil -> raise ArgumentError, "Not all group fields available in single fields list"
+    case Enum.find(fields, &(do_find_by_name!(&1, name))) do
+      nil ->
+        Logger.error inspect([name, fields])
+        raise ArgumentError, "Not all group fields available in single fields list"
       field -> field
     end
   end
+  defp do_find_by_name!({name, _, _, _, _, _, _, _}, name), do: true
+  defp do_find_by_name!(_, _), do: false
 
   def assert_ascending_contiguous_order(fields) do
     fields

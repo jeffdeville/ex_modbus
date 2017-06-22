@@ -25,9 +25,9 @@ defmodule ExModbus do
     end
   end
 
-  defmacro field_group(name, fields) do
-    quote bind_quoted: [name: name, fields: fields] do
-      @field_groups {name, fields}
+  defmacro field_group(name, fields, desc \\ "") do
+    quote bind_quoted: [name: name, fields: fields, desc: desc] do
+      @field_groups {name, fields, desc}
     end
   end
 
@@ -40,8 +40,8 @@ defmodule ExModbus do
       end
     end
 
-    field_groups_ast = for {name, include_fields} <- field_groups do
-      ModelBuilder.defgroupgetter(name, include_fields, fields)
+    field_groups_ast = for {name, include_fields, desc} <- field_groups do
+      ModelBuilder.defgroupgetter(name, include_fields, fields, desc)
     end
 
     quote do
@@ -49,7 +49,7 @@ defmodule ExModbus do
       def field_groups(), do: @field_groups
 
       defp map_results("", [], _, _), do: []
-      defp map_results(data, [{name, type, addr, num_bytes, _, desc, units, enum_map} | fields], txn_id, unit_id) do
+      defp map_results(data, [{name, type, addr, num_bytes, _, _, _, _} | fields], txn_id, unit_id) do
         num_bytes = get_real_byte_size(type, num_bytes)
         <<val::binary-size(num_bytes)-big, rest::binary>> = data
         with {:ok, %{data: value}} <- apply(__MODULE__, name, [val, txn_id, unit_id]),
