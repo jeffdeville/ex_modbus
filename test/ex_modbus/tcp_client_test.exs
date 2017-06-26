@@ -10,7 +10,6 @@ defmodule TcpClientTest do
 
     test "if no connection possible, backoff" do
       assert {:stop, :econnrefused} = TcpClient.init(%{ip: {127, 0, 0, 1}, port: 5003})
-      assert {:stop, :timeout} = TcpClient.init(%{ip: {172, 18, 0, 2}, port: 5002})
     end
   end
 
