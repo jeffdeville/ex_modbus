@@ -43,10 +43,10 @@ defmodule ExModbus.Macros do
     |> Enum.each(&assert_contiguous!/1)
   end
 
-  defp assert_contiguous!([{_, _, addr1, bytes1, _, _, _, _}, {_, _, addr2, _, _, _, _, _}]) do
-    case addr1 + bytes1 == addr2 do
+  defp assert_contiguous!([{_, _, addr1, registers, _, _, _, _}, {_, _, addr2, _, _, _, _, _}]) do
+    case addr1 + registers == addr2 do
       true -> true
-      false -> raise ArgumentError, "Fields must be contiguous. #{addr1} #{bytes1} #{addr2}"
+      false -> raise ArgumentError, "Fields must be contiguous. #{addr1} #{registers} #{addr2}"
     end
   end
 
