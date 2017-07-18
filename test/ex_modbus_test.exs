@@ -150,12 +150,14 @@ defmodule ExModbusTest do
 
     test "reads common field groupings", %{pid: pid} do
       assert {:ok, %{
-        manufacturer: manufacturer,
-        model: model,
-        options: options,
-        version: version,
-        serial_number: serial_number,
-        device_address: device_address
+        data: %{
+          manufacturer: manufacturer,
+          model: model,
+          options: options,
+          version: version,
+          serial_number: serial_number,
+          device_address: device_address
+        }, transaction_id: 1, slave_id: 1
       }} = SunSpecCommon.common(pid, 1)
       assert manufacturer == "Fronius"
       assert model == "Primo 3.8-1 208-240"
@@ -167,37 +169,39 @@ defmodule ExModbusTest do
 
     test "reads inverter field groupings", %{pid: pid} do
       assert {:ok, %{
-        amps: amps,
-        amps_phasea: amps_phasea,
-        amps_phaseb: amps_phaseb,
-        amps_phasec: amps_phasec,
-        phase_voltage_ab: phase_voltage_ab,
-        phase_voltage_bc: phase_voltage_bc,
-        phase_voltage_ca: phase_voltage_ca,
-        phase_voltage_an: phase_voltage_an,
-        phase_voltage_bn: phase_voltage_bn,
-        phase_voltage_cn: phase_voltage_cn,
-        watts: watts,
-        hz: hz,
-        va: va,
-        var: var,
-        pf: pf,
-        watthours: watthours,
-        dc_amps: dc_amps,
-        dc_voltage: dc_voltage,
-        dc_watts: dc_watts,
-        cabinet_temperature: cabinet_temperature,
-        heat_sink_temperature: heat_sink_temperature,
-        transformer_temperature: transformer_temperature,
-        other_temperature: other_temperature,
-        operating_state: operating_state,
-        vendor_operating_state: vendor_operating_state,
-        event1: event1,
-        event_bitfield_2: event_bitfield_2,
-        vendor_event_bitfield_1: vendor_event_bitfield_1,
-        vendor_event_bitfield_2: vendor_event_bitfield_2,
-        vendor_event_bitfield_3: vendor_event_bitfield_3,
-        vendor_event_bitfield_4: vendor_event_bitfield_4
+        data: %{
+          amps: amps,
+          amps_phasea: amps_phasea,
+          amps_phaseb: amps_phaseb,
+          amps_phasec: amps_phasec,
+          phase_voltage_ab: phase_voltage_ab,
+          phase_voltage_bc: phase_voltage_bc,
+          phase_voltage_ca: phase_voltage_ca,
+          phase_voltage_an: phase_voltage_an,
+          phase_voltage_bn: phase_voltage_bn,
+          phase_voltage_cn: phase_voltage_cn,
+          watts: watts,
+          hz: hz,
+          va: va,
+          var: var,
+          pf: pf,
+          watthours: watthours,
+          dc_amps: dc_amps,
+          dc_voltage: dc_voltage,
+          dc_watts: dc_watts,
+          cabinet_temperature: cabinet_temperature,
+          heat_sink_temperature: heat_sink_temperature,
+          transformer_temperature: transformer_temperature,
+          other_temperature: other_temperature,
+          operating_state: operating_state,
+          vendor_operating_state: vendor_operating_state,
+          event1: event1,
+          event_bitfield_2: event_bitfield_2,
+          vendor_event_bitfield_1: vendor_event_bitfield_1,
+          vendor_event_bitfield_2: vendor_event_bitfield_2,
+          vendor_event_bitfield_3: vendor_event_bitfield_3,
+          vendor_event_bitfield_4: vendor_event_bitfield_4
+        }, transaction_id: 1, slave_id: 1
       }} = SunSpecInverter.inverter_single_phase_float(pid, 1)
 
       assert amps == 1.409999966621399
