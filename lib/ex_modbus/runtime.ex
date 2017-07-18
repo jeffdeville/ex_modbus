@@ -7,10 +7,10 @@ defmodule ExModbus.Runtime do
     with {:ok, %{data: {:read_holding_registers, data},
                  transaction_id: transaction_id,
                  unit_id: unit_id}} <- ExModbus.Client.read_data(pid, slave_id, addr, num_bytes),
-         File.write!("./data.bin", data, [:binary]),
-         results = map_results(data, fields, transaction_id, unit_id)
+         results = map_results(data, fields, transaction_id, unit_id),
+         {:ok, mapped_results} <- assert_valid_results(results)
     do
-         assert_valid_results(results)
+         {:ok, %{data: mapped_results, transaction_id: transaction_id, slave_id: unit_id}}
     end
   end
 

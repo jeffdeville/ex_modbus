@@ -27,11 +27,11 @@ defmodule ExModbus.TcpClient do
   def command(msg, socket, unit_id) do
     with wrapped_packet = wrap_packet(msg, unit_id),
          {:ok, resp_packet} <- send_receive(wrapped_packet, socket),
-         Logger.debug("Response: #{inspect resp_packet}"),
+         Logger.debug("Response: #{inspect resp_packet, limit: 1000}"),
          unwrapped_resp_packet = unwrap_packet(resp_packet),
-         Logger.debug("Unwrapped: #{inspect unwrapped_resp_packet}"),
+         Logger.debug("Unwrapped: #{inspect unwrapped_resp_packet, limit: 1000}"),
          {:ok, data} <- Modbus.Packet.parse_response_packet(unwrapped_resp_packet.packet),
-         Logger.debug("Parsed: #{inspect data}")
+         Logger.debug("Parsed: #{inspect data, limit: 1000}")
     do
       {:ok, %{
           unit_id: unit_id,
@@ -42,7 +42,7 @@ defmodule ExModbus.TcpClient do
   end
 
   def send_receive(msg, socket) do
-    Logger.debug "Packet: #{inspect msg}"
+    Logger.debug "Packet: #{inspect msg, limit: 1000}"
     :ok = :gen_tcp.send(socket, msg)
     # Need to change this to be non-blocking, or will this be a problem since
     # we're not going to be hitting the same device repeatedly? What happens
